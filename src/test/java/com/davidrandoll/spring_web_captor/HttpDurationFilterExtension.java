@@ -1,7 +1,8 @@
-package com.davidrandoll.spring_web_captor.extensions;
+package com.davidrandoll.spring_web_captor;
 
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
+import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

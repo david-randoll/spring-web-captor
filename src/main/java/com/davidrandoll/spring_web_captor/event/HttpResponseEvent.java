@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
@@ -18,7 +20,9 @@ import java.util.Map;
 
 @Data
 @FieldNameConstants
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder(toBuilder = true)
 public class HttpResponseEvent {
     private boolean endpointExists;
     private String fullUrl;
@@ -36,7 +40,6 @@ public class HttpResponseEvent {
     @JsonAnySetter
     @JsonAnyGetter
     private Map<String, Object> additionalData;
-
 
     public void addErrorDetail(@NonNull Map<String, Object> errorDetail) {
         this.errorDetail = errorDetail;
