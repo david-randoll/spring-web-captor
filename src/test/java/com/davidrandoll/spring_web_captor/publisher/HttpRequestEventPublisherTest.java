@@ -21,8 +21,10 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -250,16 +252,6 @@ class HttpRequestEventPublisherTest {
     }
 
     @Test
-    void testEndpointNotFoundPublishesNoEvents() throws Exception {
-        mockMvc.perform(get("/test/notfound"))
-                .andExpect(status().isNotFound());
-
-        // Verify no events are published
-        assertThat(eventCaptureListener.getRequestEvents()).isEmpty();
-        assertThat(eventCaptureListener.getResponseEvents()).isEmpty();
-    }
-
-    @Test
     void testConcurrentRequestsPublishesEventsInOrder() throws Exception {
         // Fire multiple requests concurrently
         List<MockHttpServletRequestBuilder> requests = Arrays.asList(
@@ -420,4 +412,21 @@ class HttpRequestEventPublisherTest {
         assertThat(responseBodyJson.asText()).isEqualTo("Post without body received");
 
     }
+
+    @Test
+    void testResponseBodyParsingFailureStillPublishesEvent() throws Exception {
+        mockMvc.perform(get("/test/streaming"))
+                .andExpect(status().isOk());
+
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(eventCaptureListener.getResponseEvents()).hasSize(1)
+        );
+
+        HttpResponseEvent event = eventCaptureListener.getResponseEvents().getFirst();
+
+        // Body should be empty or null (depends on your fallback logic)
+        assertThat(event.getResponseBody().isEmpty()).isTrue();
+        assertThat(event.getResponseStatus()).isEqualTo(HttpStatus.OK);
+    }
+
 }

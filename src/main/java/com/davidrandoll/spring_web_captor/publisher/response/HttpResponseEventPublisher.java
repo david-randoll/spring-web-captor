@@ -63,19 +63,15 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
-
-            if (!requestWrapper.isEndpointExists()) return;
             buildAndPublishResponseEvent(request, requestWrapper, responseWrapper);
         } catch (Exception ex) {
-            responseWrapper.resetBuffer();
-            responseWrapper.setContentType("application/json;charset=UTF-8");
-            handlerExceptionResolver.resolveException(requestWrapper, responseWrapper, null, ex);
+            resolveException(ex, responseWrapper, requestWrapper);
         } finally {
             responseWrapper.copyBodyToResponse(); // IMPORTANT: copy response back into original response
         }
     }
 
-    private void buildAndPublishResponseEvent(HttpServletRequest request, CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) throws IOException {
+    private void buildAndPublishResponseEvent(HttpServletRequest request, CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) {
         final HttpStatus responseStatus = HttpStatus.valueOf(responseWrapper.getStatus());
         final HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
         final HttpResponseEvent responseEvent = toHttpResponseEvent(requestEvent, responseStatus);
@@ -83,8 +79,13 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
         if (responseStatus.is2xxSuccessful()) {
             CompletionStage<JsonNode> responseBody = responseWrapper.getResponseBody(requestWrapper);
 
-            responseBody.thenAccept(body -> {
-                responseEvent.setResponseBody(body);
+            responseBody.whenComplete((body, throwable) -> {
+                if (throwable != null) {
+                    var ex = new RuntimeException(throwable);
+                    resolveException(ex, responseWrapper, requestWrapper);
+                } else {
+                    responseEvent.setResponseBody(body);
+                }
                 publishResponseEvent(requestEvent, responseEvent);
             });
         } else {
@@ -114,6 +115,12 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
                 .requestBody(requestEvent.getRequestBody())
                 .responseStatus(responseStatus)
                 .build();
+    }
+
+    private void resolveException(Exception ex, CachedBodyHttpServletResponse responseWrapper, CachedBodyHttpServletRequest requestWrapper) {
+        responseWrapper.resetBuffer();
+        responseWrapper.setContentType("application/json;charset=UTF-8");
+        handlerExceptionResolver.resolveException(requestWrapper, responseWrapper, null, ex);
     }
 
     private Map<String, Object> getErrorAttributes(HttpServletRequest request) {

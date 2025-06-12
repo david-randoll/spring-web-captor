@@ -23,7 +23,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         this.mapper = mapper;
     }
 
-    public CompletionStage<JsonNode> getResponseBody(ContentCachingRequestWrapper request) throws IOException {
+    public CompletionStage<JsonNode> getResponseBody(ContentCachingRequestWrapper request) {
         var future = new CompletableFuture<JsonNode>();
 
         if (request.isAsyncStarted()) {
@@ -51,7 +51,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         return future;
     }
 
-    private void getBody(CompletableFuture<JsonNode> future) throws IOException {
+    private void getBody(CompletableFuture<JsonNode> future) {
         JsonNode body = HttpServletUtils.parseByteArrayToJsonNode(this.getContentType(), this.getContentAsByteArray(), mapper);
         future.complete(body);
     }

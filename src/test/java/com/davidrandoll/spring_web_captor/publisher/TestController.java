@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -101,6 +102,15 @@ public class TestController {
     public ResponseEntity<String> postWithoutBody() {
         return ResponseEntity.ok("Post without body received");
     }
+
+    @GetMapping("/streaming")
+    public StreamingResponseBody streaming() {
+        return outputStream -> {
+            outputStream.write("This is not JSON".getBytes());
+            outputStream.flush();
+        };
+    }
+
 
     public record TestRequest(@NotEmpty String name, String value) {
     }
