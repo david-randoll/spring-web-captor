@@ -63,7 +63,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
-            buildAndPublishResponseEvent(request, requestWrapper, responseWrapper);
+            buildAndPublishResponseEvent(requestWrapper, responseWrapper);
         } catch (Exception ex) {
             resolveException(ex, responseWrapper, requestWrapper);
         } finally {
@@ -71,7 +71,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
         }
     }
 
-    private void buildAndPublishResponseEvent(HttpServletRequest request, CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) {
+    private void buildAndPublishResponseEvent(CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) {
         final HttpStatus responseStatus = HttpStatus.valueOf(responseWrapper.getStatus());
         final HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
         final HttpResponseEvent responseEvent = toHttpResponseEvent(requestEvent, responseStatus);
@@ -89,7 +89,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
                 publishResponseEvent(requestEvent, responseEvent);
             });
         } else {
-            var errorAttributes = getErrorAttributes(request);
+            var errorAttributes = getErrorAttributes(requestWrapper);
             responseEvent.addErrorDetail(errorAttributes);
             publishResponseEvent(requestEvent, responseEvent);
         }
@@ -123,8 +123,8 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
         handlerExceptionResolver.resolveException(requestWrapper, responseWrapper, null, ex);
     }
 
-    private Map<String, Object> getErrorAttributes(HttpServletRequest request) {
-        WebRequest webRequest = new ServletWebRequest(request);
+    private Map<String, Object> getErrorAttributes(CachedBodyHttpServletRequest requestWrapper) {
+        WebRequest webRequest = new ServletWebRequest(requestWrapper);
         ErrorAttributeOptions options = ErrorAttributeOptions.of(ErrorAttributeOptions.Include.values());
         return defaultErrorAttributes.getErrorAttributes(webRequest, options);
     }
