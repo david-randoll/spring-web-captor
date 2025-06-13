@@ -73,7 +73,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     private void buildAndPublishResponseEvent(CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) {
         final HttpStatus responseStatus = HttpStatus.valueOf(responseWrapper.getStatus());
         final HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
-        final HttpResponseEvent responseEvent = toHttpResponseEvent(requestEvent, responseStatus, responseWrapper);
+        final HttpResponseEvent responseEvent = createHttpResponseEvent(requestEvent, responseStatus, responseWrapper);
 
         if (responseStatus.is2xxSuccessful()) {
             CompletionStage<JsonNode> responseBody = responseWrapper.getResponseBody(requestWrapper);
@@ -102,17 +102,10 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
         publisher.publishEvent(responseEvent);
     }
 
-    private static HttpResponseEvent toHttpResponseEvent(HttpRequestEvent requestEvent, HttpStatus responseStatus, CachedBodyHttpServletResponse responseWrapper) {
+    private static HttpResponseEvent createHttpResponseEvent(HttpRequestEvent requestEvent, HttpStatus responseStatus, CachedBodyHttpServletResponse responseWrapper) {
         var responseHeaders = responseWrapper.getHttpHeaders();
-        return HttpResponseEvent.builder()
-                .endpointExists(requestEvent.isEndpointExists())
-                .fullUrl(requestEvent.getFullUrl())
-                .path(requestEvent.getPath())
-                .method(requestEvent.getMethod())
-                .requestHeaders(requestEvent.getHeaders())
-                .queryParams(requestEvent.getQueryParams())
-                .pathParams(requestEvent.getPathParams())
-                .requestBody(requestEvent.getRequestBody())
+
+        return new HttpResponseEvent(requestEvent).toBuilder()
                 .responseStatus(responseStatus)
                 .responseHeaders(responseHeaders)
                 .build();

@@ -165,7 +165,7 @@ class HttpRequestEventPublisherTest {
         // responseBody
         assertThat(responseEvent.getResponseBody()).isEmpty();
         // headers
-        assertThat(responseEvent.getRequestHeaders()).isEmpty();
+        assertThat(responseEvent.getHeaders()).isEmpty();
         // requestBody
         assertThat(responseEvent.getRequestBody()).isEmpty();
         // queryParams
