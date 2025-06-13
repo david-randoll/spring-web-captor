@@ -111,6 +111,18 @@ public class TestController {
         };
     }
 
+    @GetMapping("/crash")
+    public String crash() {
+        throw new RuntimeException("Intentional crash");
+    }
+
+    @DeleteMapping("/nocontent")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete() {
+        // nothing to return
+    }
+
+
 
     public record TestRequest(@NotEmpty String name, String value) {
     }

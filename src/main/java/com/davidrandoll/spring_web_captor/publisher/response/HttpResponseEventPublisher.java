@@ -10,7 +10,6 @@ import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +56,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
      * This is why in the {@link  HttpRequestEventPublisher#preHandle}, the event is published in the preHandle method.
      */
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException {
         CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request, objectMapper);
         CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, objectMapper);
 
@@ -74,7 +73,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     private void buildAndPublishResponseEvent(CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) {
         final HttpStatus responseStatus = HttpStatus.valueOf(responseWrapper.getStatus());
         final HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
-        final HttpResponseEvent responseEvent = toHttpResponseEvent(requestEvent, responseStatus);
+        final HttpResponseEvent responseEvent = toHttpResponseEvent(requestEvent, responseStatus, responseWrapper);
 
         if (responseStatus.is2xxSuccessful()) {
             CompletionStage<JsonNode> responseBody = responseWrapper.getResponseBody(requestWrapper);
@@ -103,17 +102,19 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
         publisher.publishEvent(responseEvent);
     }
 
-    private static HttpResponseEvent toHttpResponseEvent(HttpRequestEvent requestEvent, HttpStatus responseStatus) {
+    private static HttpResponseEvent toHttpResponseEvent(HttpRequestEvent requestEvent, HttpStatus responseStatus, CachedBodyHttpServletResponse responseWrapper) {
+        var responseHeaders = responseWrapper.getHttpHeaders();
         return HttpResponseEvent.builder()
                 .endpointExists(requestEvent.isEndpointExists())
                 .fullUrl(requestEvent.getFullUrl())
                 .path(requestEvent.getPath())
                 .method(requestEvent.getMethod())
-                .headers(requestEvent.getHeaders())
+                .requestHeaders(requestEvent.getHeaders())
                 .queryParams(requestEvent.getQueryParams())
                 .pathParams(requestEvent.getPathParams())
                 .requestBody(requestEvent.getRequestBody())
                 .responseStatus(responseStatus)
+                .responseHeaders(responseHeaders)
                 .build();
     }
 

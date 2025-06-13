@@ -28,25 +28,19 @@ public class HttpResponseEvent {
     private String fullUrl;
     private String path;
     private HttpMethodEnum method;
-    private HttpHeaders headers;
+    private HttpHeaders requestHeaders;
     private MultiValueMap<String, String> queryParams;
     private Map<String, String> pathParams;
     private JsonNode requestBody;
 
     private JsonNode responseBody;
     private HttpStatus responseStatus;
+    private HttpHeaders responseHeaders;
     private Map<String, Object> errorDetail;
 
     @JsonAnySetter
     @JsonAnyGetter
     private Map<String, Object> additionalData;
-
-    public void addErrorDetail(@NonNull Map<String, Object> errorDetail) {
-        this.errorDetail = errorDetail;
-        var factory = new ObjectMapper().getNodeFactory();
-        var message = errorDetail.getOrDefault("message", "").toString();
-        this.responseBody = factory.textNode(message);
-    }
 
     public void addAdditionalData(@NonNull Map<String, Object> additionalData) {
         if (this.additionalData == null) this.additionalData = new HashMap<>();
@@ -64,6 +58,13 @@ public class HttpResponseEvent {
         var value = this.additionalData.get(key);
         if (value == null) return null;
         return type.cast(value);
+    }
+
+    public void addErrorDetail(@NonNull Map<String, Object> errorDetail) {
+        this.errorDetail = errorDetail;
+        var factory = new ObjectMapper().getNodeFactory();
+        var message = errorDetail.getOrDefault("message", "").toString();
+        this.responseBody = factory.textNode(message);
     }
 
     public boolean isErrorResponse() {

@@ -165,7 +165,7 @@ class HttpRequestEventPublisherTest {
         // responseBody
         assertThat(responseEvent.getResponseBody()).isEmpty();
         // headers
-        assertThat(responseEvent.getHeaders()).isEmpty();
+        assertThat(responseEvent.getRequestHeaders()).isEmpty();
         // requestBody
         assertThat(responseEvent.getRequestBody()).isEmpty();
         // queryParams
@@ -428,5 +428,35 @@ class HttpRequestEventPublisherTest {
         assertThat(event.getResponseBody().isEmpty()).isTrue();
         assertThat(event.getResponseStatus()).isEqualTo(HttpStatus.OK);
     }
+
+    @Test
+    void testUnhandledExceptionInControllerPublishesErrorResponseEvent() throws Exception {
+        mockMvc.perform(get("/test/crash"))
+                .andExpect(status().isInternalServerError());
+
+        await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(eventCaptureListener.getResponseEvents()).hasSize(1)
+        );
+
+        HttpResponseEvent event = eventCaptureListener.getResponseEvents().getFirst();
+        assertThat(event.getResponseStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(event.getErrorDetail()).isNotEmpty();
+        assertThat(event.getResponseBody().asText()).contains("Unexpected error");
+    }
+
+    @Test
+    void testNoContentResponsePublishesEvent() throws Exception {
+        mockMvc.perform(delete("/test/nocontent"))
+                .andExpect(status().isNoContent());
+
+        await().atMost(1, TimeUnit.SECONDS).untilAsserted(() ->
+                assertThat(eventCaptureListener.getResponseEvents()).hasSize(1)
+        );
+
+        HttpResponseEvent event = eventCaptureListener.getResponseEvents().getFirst();
+        assertThat(event.getResponseStatus()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(event.getResponseBody().isEmpty()).isTrue();
+    }
+
 
 }

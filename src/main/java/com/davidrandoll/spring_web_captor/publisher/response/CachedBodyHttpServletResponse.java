@@ -7,10 +7,12 @@ import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -21,6 +23,13 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
     public CachedBodyHttpServletResponse(HttpServletResponse response, ObjectMapper mapper) {
         super(response);
         this.mapper = mapper;
+    }
+
+    public HttpHeaders getHttpHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        Optional.of(this.getHeaderNames())
+                .ifPresent(headerNames -> headerNames.forEach(name -> headers.put(name, this.getHeaders(name).stream().toList())));
+        return headers;
     }
 
     public CompletionStage<JsonNode> getResponseBody(ContentCachingRequestWrapper request) {

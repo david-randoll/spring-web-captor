@@ -19,7 +19,6 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -84,19 +83,14 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
         return Collections.emptyMap();
     }
 
-    public Map<String, ArrayList<String>> getHeaders() {
-        return Collections.list(this.getHeaderNames()).stream()
-                .collect(Collectors.toMap(
-                        h -> h,
-                        h -> Collections.list(this.getHeaders(h))
-                ));
-    }
-
     public HttpHeaders getHttpHeaders() {
         HttpHeaders headers = new HttpHeaders();
-        headers.putAll(this.getHeaders());
+        Collections.list(this.getHeaderNames()).forEach(
+                name -> headers.put(name, Collections.list(this.getHeaders(name)))
+        );
         return headers;
     }
+
 
     public String getPath() {
         return this.getRequestURI();
