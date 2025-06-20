@@ -17,7 +17,8 @@ public enum HttpMethodEnum {
     HEAD("HEAD"),
     OPTIONS("OPTIONS"),
     TRACE("TRACE"),
-    CONNECT("CONNECT");
+    CONNECT("CONNECT"),
+    UNKNOWN("UNKNOWN");
 
     private final String method;
 

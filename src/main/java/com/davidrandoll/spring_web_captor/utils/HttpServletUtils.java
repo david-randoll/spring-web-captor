@@ -88,20 +88,19 @@ public class HttpServletUtils {
     }
 
     public static JsonNode parseByteArrayToJsonNode(String contentType, byte[] cachedBody, ObjectMapper objectMapper) {
-        try {
-            JsonNodeFactory factory = JsonNodeFactory.instance;
-            if (ObjectUtils.isEmpty(cachedBody)) return factory.nullNode();
-
-            if (contentType != null && contentType.contains(MediaType.APPLICATION_JSON_VALUE)) {
+        JsonNodeFactory factory = JsonNodeFactory.instance;
+        if (ObjectUtils.isEmpty(cachedBody)) return factory.nullNode();
+        if (contentType != null && contentType.contains(MediaType.APPLICATION_JSON_VALUE)) {
+            try {
                 return objectMapper.readTree(cachedBody);
-            } else {
-                // if the content type is not JSON, we can try to parse it as a text node
-                var stringBody = new String(cachedBody, StandardCharsets.UTF_8);
-                return factory.textNode(stringBody);
+            } catch (IOException e) {
+                log.error("Failed to parse JSON from byte array: {}", e.getMessage(), e);
             }
-        } catch (IOException e) {
-            throw new WebCaptorHttpParseException(e);
         }
+
+        // if the content type is not JSON, we can try to parse it as a text node
+        var stringBody = new String(cachedBody, StandardCharsets.UTF_8);
+        return factory.textNode(stringBody);
     }
 
     public static JsonNode toJsonNode(String contentType, Object body, ObjectMapper objectMapper) {

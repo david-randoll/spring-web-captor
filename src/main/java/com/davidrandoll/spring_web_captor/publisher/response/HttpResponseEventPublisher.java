@@ -21,6 +21,7 @@ import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -33,6 +34,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
+
+import static com.davidrandoll.spring_web_captor.utils.ExceptionUtils.safe;
 
 
 @Slf4j
@@ -82,16 +85,21 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
                 if (throwable != null) {
                     var ex = new RuntimeException(throwable);
                     resolveException(ex, responseWrapper, requestWrapper);
+                    publishErrorResponseEvent(requestWrapper, responseEvent, requestEvent);
                 } else {
                     responseEvent.setResponseBody(body);
+                    publishResponseEvent(requestEvent, responseEvent);
                 }
-                publishResponseEvent(requestEvent, responseEvent);
             });
         } else {
-            var errorAttributes = getErrorAttributes(requestWrapper);
-            responseEvent.addErrorDetail(errorAttributes);
-            publishResponseEvent(requestEvent, responseEvent);
+            publishErrorResponseEvent(requestWrapper, responseEvent, requestEvent);
         }
+    }
+
+    private void publishErrorResponseEvent(CachedBodyHttpServletRequest requestWrapper, HttpResponseEvent responseEvent, HttpRequestEvent requestEvent) {
+        var errorAttributes = getErrorAttributes(requestWrapper);
+        responseEvent.addErrorDetail(errorAttributes);
+        publishResponseEvent(requestEvent, responseEvent);
     }
 
     private void publishResponseEvent(HttpRequestEvent requestEvent, HttpResponseEvent responseEvent) {
@@ -103,11 +111,9 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     }
 
     private static HttpResponseEvent createHttpResponseEvent(HttpRequestEvent requestEvent, HttpStatus responseStatus, CachedBodyHttpServletResponse responseWrapper) {
-        var responseHeaders = responseWrapper.getHttpHeaders();
-
         return new HttpResponseEvent(requestEvent).toBuilder()
                 .responseStatus(responseStatus)
-                .responseHeaders(responseHeaders)
+                .responseHeaders(safe(responseWrapper::getHttpHeaders, new HttpHeaders()))
                 .build();
     }
 

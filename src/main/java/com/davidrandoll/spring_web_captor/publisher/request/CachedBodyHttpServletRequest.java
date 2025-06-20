@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.davidrandoll.spring_web_captor.utils.ExceptionUtils.safe;
+
 public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     private byte[] cachedBody;
     @Getter
@@ -108,11 +110,11 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
                 .endpointExists(this.endpointExists)
                 .fullUrl(this.getFullUrl())
                 .path(this.getPath())
-                .method(HttpMethodEnum.fromValue(this.getMethod()))
-                .headers(this.getHttpHeaders())
-                .queryParams(this.getRequestParams())
-                .pathParams(this.getPathVariables())
-                .requestBody(this.getBody())
+                .method(safe(() -> HttpMethodEnum.fromValue(this.getMethod()), HttpMethodEnum.UNKNOWN))
+                .headers(safe(this::getHttpHeaders, new HttpHeaders()))
+                .queryParams(safe(this::getRequestParams, new LinkedMultiValueMap<>()))
+                .pathParams(safe(this::getPathVariables, Collections.emptyMap()))
+                .requestBody(safe(this::getBody, null))
                 .build();
 
         return this.httpRequestEvent;

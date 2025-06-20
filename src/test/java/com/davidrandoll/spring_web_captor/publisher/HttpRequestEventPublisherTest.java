@@ -441,7 +441,7 @@ class HttpRequestEventPublisherTest {
         HttpResponseEvent event = eventCaptureListener.getResponseEvents().getFirst();
         assertThat(event.getResponseStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(event.getErrorDetail()).isNotEmpty();
-        assertThat(event.getResponseBody().asText()).contains("Unexpected error");
+        assertThat(event.getResponseBody().asText()).contains("Intentional crash");
     }
 
     @Test
