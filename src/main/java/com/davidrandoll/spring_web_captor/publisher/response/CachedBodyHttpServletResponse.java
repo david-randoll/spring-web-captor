@@ -32,7 +32,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         return headers;
     }
 
-    public CompletionStage<JsonNode> getResponseBody(ContentCachingRequestWrapper request) {
+    public CompletionStage<JsonNode> getResponseBody(ContentCachingRequestWrapper request) throws IOException {
         var future = new CompletableFuture<JsonNode>();
 
         if (request.isAsyncStarted()) {
@@ -60,8 +60,9 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         return future;
     }
 
-    private void getBody(CompletableFuture<JsonNode> future) {
+    private void getBody(CompletableFuture<JsonNode> future) throws IOException {
         JsonNode body = HttpServletUtils.parseByteArrayToJsonNode(this.getContentType(), this.getContentAsByteArray(), mapper);
         future.complete(body);
+        this.copyBodyToResponse(); // IMPORTANT: copy response back into original response
     }
 }

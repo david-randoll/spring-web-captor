@@ -12,8 +12,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -28,7 +30,7 @@ import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = WebCaptorApplication.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = WebCaptorApplication.class)
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HttpRequestEventPublisherTest {
@@ -41,6 +43,9 @@ class HttpRequestEventPublisherTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     @BeforeEach
     void setUp() {
@@ -414,9 +419,12 @@ class HttpRequestEventPublisherTest {
     }
 
     @Test
-    void testResponseBodyParsingFailureStillPublishesEvent() throws Exception {
-        mockMvc.perform(get("/test/streaming"))
-                .andExpect(status().isOk());
+    void testResponseBodyParsingFailureStillPublishesEvent() {
+        // using restTemplate to simulate a streaming response
+        // mockMvc for some reason does not handle streaming responses well
+        ResponseEntity<String> response = restTemplate.getForEntity("/test/streaming", String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo("This is not JSON");
 
         await().atMost(10, TimeUnit.SECONDS).untilAsserted(() ->
                 assertThat(eventCaptureListener.getResponseEvents()).hasSize(1)
@@ -427,6 +435,8 @@ class HttpRequestEventPublisherTest {
         // Body should be empty or null (depends on your fallback logic)
         assertThat(event.getResponseBody().isEmpty()).isTrue();
         assertThat(event.getResponseStatus()).isEqualTo(HttpStatus.OK);
+        // check that the response body is not parsed as JSON
+        assertThat(event.getResponseBody().asText()).isEqualTo("This is not JSON");
     }
 
     @Test

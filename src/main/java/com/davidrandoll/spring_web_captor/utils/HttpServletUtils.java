@@ -1,6 +1,5 @@
 package com.davidrandoll.spring_web_captor.utils;
 
-import com.davidrandoll.spring_web_captor.exceptions.WebCaptorHttpParseException;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.response.CachedBodyHttpServletResponse;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -101,19 +100,5 @@ public class HttpServletUtils {
         // if the content type is not JSON, we can try to parse it as a text node
         var stringBody = new String(cachedBody, StandardCharsets.UTF_8);
         return factory.textNode(stringBody);
-    }
-
-    public static JsonNode toJsonNode(String contentType, Object body, ObjectMapper objectMapper) {
-        var factory = JsonNodeFactory.instance;
-        if (body == null) return factory.nullNode();
-        try {
-            if (contentType != null && contentType.contains("json")) {
-                return objectMapper.readTree(body.toString());
-            } else {
-                return factory.textNode(body.toString());
-            }
-        } catch (IOException e) {
-            throw new WebCaptorHttpParseException(e);
-        }
     }
 }

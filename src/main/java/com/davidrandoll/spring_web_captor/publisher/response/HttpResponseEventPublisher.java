@@ -73,7 +73,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
         }
     }
 
-    private void buildAndPublishResponseEvent(CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) {
+    private void buildAndPublishResponseEvent(CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) throws IOException {
         final HttpStatus responseStatus = HttpStatus.valueOf(responseWrapper.getStatus());
         final HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
         final HttpResponseEvent responseEvent = createHttpResponseEvent(requestEvent, responseStatus, responseWrapper);
