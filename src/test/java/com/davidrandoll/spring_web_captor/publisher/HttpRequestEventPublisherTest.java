@@ -1,6 +1,7 @@
 package com.davidrandoll.spring_web_captor.publisher;
 
 import com.davidrandoll.spring_web_captor.WebCaptorApplication;
+import com.davidrandoll.spring_web_captor.setup.EventCaptureListener;
 import com.davidrandoll.spring_web_captor.event.HttpMethodEnum;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;

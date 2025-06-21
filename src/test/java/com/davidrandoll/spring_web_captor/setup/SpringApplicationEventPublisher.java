@@ -1,5 +1,6 @@
-package com.davidrandoll.spring_web_captor.publisher;
+package com.davidrandoll.spring_web_captor.setup;
 
+import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;

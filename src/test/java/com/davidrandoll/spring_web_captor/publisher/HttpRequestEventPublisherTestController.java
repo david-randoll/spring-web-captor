@@ -15,7 +15,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/test")
-public class TestController {
+public class HttpRequestEventPublisherTestController {
 
     @GetMapping("/get")
     public ResponseEntity<String> getEndpoint() {

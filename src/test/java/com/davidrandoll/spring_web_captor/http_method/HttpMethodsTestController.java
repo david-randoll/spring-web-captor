@@ -1,4 +1,4 @@
-package com.davidrandoll.spring_web_captor.publisher;
+package com.davidrandoll.spring_web_captor.http_method;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.davidrandoll.spring_web_captor;
+package com.davidrandoll.spring_web_captor.setup;
 
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
