@@ -36,6 +36,7 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     @Setter
     private boolean endpointExists;
 
+    private boolean isPublished = false;
     private HttpRequestEvent httpRequestEvent;
     private final ObjectMapper objectMapper;
 
@@ -124,11 +125,13 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     }
 
     public void publishEvent(List<IHttpEventExtension> httpEventExtensions, IWebCaptorEventPublisher publisher) {
+        if (this.isPublished) return;
         var requestEvent = this.toHttpRequestEvent();
         for (IHttpEventExtension extension : httpEventExtensions) {
             var additionalData = extension.extendRequestEvent(requestEvent);
             requestEvent.addAdditionalData(additionalData);
         }
         publisher.publishEvent(requestEvent);
+        this.isPublished = true;
     }
 }

@@ -1,6 +1,5 @@
 package com.davidrandoll.spring_web_captor.publisher.response;
 
-import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
@@ -16,21 +15,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.ServletWebRequest;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 
@@ -61,18 +56,29 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
-            buildAndPublishResponseEvent(requestWrapper, responseWrapper);
+            publishRequestEventIfNotPublishedAlready(requestWrapper);
+            buildAndPublishResponseEvent(responseWrapper);
         } catch (Exception ex) {
             responseWrapper.resolveException(ex, handlerExceptionResolver);
+            responseWrapper.publishErrorEvent(httpEventExtensions, publisher, defaultErrorAttributes);
         } finally {
             responseWrapper.copyBodyToResponse(); // IMPORTANT: copy response back into original response
         }
     }
 
-    private void buildAndPublishResponseEvent(CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) throws IOException {
-        final HttpStatus responseStatus = responseWrapper.getResponseStatus();
-        final HttpResponseEvent responseEvent = responseWrapper.toHttpResponseEvent();
+    /**
+     * There are some times when the {@link HttpRequestEventPublisher#preHandle} method is not called,
+     * for example, when the endpoint does not exist or when the request return a 4xx error before the filter chain is executed.
+     * In this case, we need to publish the request event here.
+     *
+     * @param requestWrapper the request wrapper that contains the request event
+     */
+    private void publishRequestEventIfNotPublishedAlready(CachedBodyHttpServletRequest requestWrapper) {
+        requestWrapper.publishEvent(httpEventExtensions, publisher);
+    }
 
+    private void buildAndPublishResponseEvent(CachedBodyHttpServletResponse responseWrapper) throws IOException {
+        final HttpStatus responseStatus = responseWrapper.getResponseStatus();
         if (responseStatus.is2xxSuccessful()) {
             CompletionStage<JsonNode> responseBody = responseWrapper.getResponseBody();
 
@@ -80,22 +86,13 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
                 if (throwable != null) {
                     var ex = new RuntimeException(throwable);
                     responseWrapper.resolveException(ex, handlerExceptionResolver);
-                    publishErrorResponseEvent(requestWrapper, responseEvent, responseWrapper);
+                    responseWrapper.publishErrorEvent(httpEventExtensions, publisher, defaultErrorAttributes);
                 } else {
-                    responseEvent.setResponseBody(body);
-                    responseWrapper.publishEvent(httpEventExtensions, publisher);
+                    responseWrapper.publishEvent(body, httpEventExtensions, publisher);
                 }
             });
         } else {
-            publishErrorResponseEvent(requestWrapper, responseEvent, responseWrapper);
+            responseWrapper.publishErrorEvent(httpEventExtensions, publisher, defaultErrorAttributes);
         }
-    }
-
-    private void publishErrorResponseEvent(CachedBodyHttpServletRequest requestWrapper, HttpResponseEvent responseEvent, CachedBodyHttpServletResponse responseWrapper) {
-        WebRequest webRequest = new ServletWebRequest(requestWrapper);
-        ErrorAttributeOptions options = ErrorAttributeOptions.of(ErrorAttributeOptions.Include.values());
-        Map<String, Object> errorAttributes = defaultErrorAttributes.getErrorAttributes(webRequest, options);
-        responseEvent.addErrorDetail(errorAttributes);
-        responseWrapper.publishEvent(httpEventExtensions, publisher);
     }
 }
