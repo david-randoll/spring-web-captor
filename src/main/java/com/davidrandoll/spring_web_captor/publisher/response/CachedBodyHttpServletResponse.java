@@ -1,5 +1,10 @@
 package com.davidrandoll.spring_web_captor.publisher.response;
 
+import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
+import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
+import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
+import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
+import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,20 +13,29 @@ import jakarta.servlet.AsyncListener;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import static com.davidrandoll.spring_web_captor.utils.ExceptionUtils.safe;
+import static java.util.Objects.nonNull;
+
 @Slf4j
 public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper {
     private final ObjectMapper mapper;
+    private final CachedBodyHttpServletRequest request;
 
-    public CachedBodyHttpServletResponse(HttpServletResponse response, ObjectMapper mapper) {
+    private HttpResponseEvent httpResponseEvent;
+
+    public CachedBodyHttpServletResponse(HttpServletResponse response, CachedBodyHttpServletRequest request, ObjectMapper mapper) {
         super(response);
+        this.request = request;
         this.mapper = mapper;
     }
 
@@ -32,7 +46,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         return headers;
     }
 
-    public CompletionStage<JsonNode> getResponseBody(ContentCachingRequestWrapper request) throws IOException {
+    public CompletionStage<JsonNode> getResponseBody() throws IOException {
         var future = new CompletableFuture<JsonNode>();
 
         if (request.isAsyncStarted()) {
@@ -64,5 +78,37 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         JsonNode body = HttpServletUtils.parseByteArrayToJsonNode(this.getContentType(), this.getContentAsByteArray(), mapper);
         future.complete(body);
         this.copyBodyToResponse(); // IMPORTANT: copy response back into original response
+    }
+
+    public HttpStatus getResponseStatus() {
+        return HttpStatus.valueOf(this.getStatus());
+    }
+
+    public HttpResponseEvent toHttpResponseEvent() {
+        if (nonNull(this.httpResponseEvent)) return this.httpResponseEvent;
+
+        HttpRequestEvent requestEvent = this.request.toHttpRequestEvent();
+        this.httpResponseEvent = new HttpResponseEvent(requestEvent).toBuilder()
+                .responseStatus(this.getResponseStatus())
+                .responseHeaders(safe(this::getHttpHeaders, new HttpHeaders()))
+                .build();
+
+        return this.httpResponseEvent;
+    }
+
+    public void publishEvent(List<IHttpEventExtension> httpEventExtensions, IWebCaptorEventPublisher publisher) {
+        HttpRequestEvent requestEvent = this.request.toHttpRequestEvent();
+        HttpResponseEvent responseEvent = this.toHttpResponseEvent();
+        for (IHttpEventExtension extension : httpEventExtensions) {
+            var additionalData = extension.extendResponseEvent(requestEvent, responseEvent);
+            responseEvent.addAdditionalData(additionalData);
+        }
+        publisher.publishEvent(responseEvent);
+    }
+
+    public void resolveException(Exception ex, HandlerExceptionResolver handlerExceptionResolver) {
+        this.resetBuffer();
+        this.setContentType("application/json;charset=UTF-8");
+        handlerExceptionResolver.resolveException(this.request, this, null, ex);
     }
 }

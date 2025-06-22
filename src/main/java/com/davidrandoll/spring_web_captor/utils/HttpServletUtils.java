@@ -32,10 +32,10 @@ public class HttpServletUtils {
         return new CachedBodyHttpServletRequest(request, mapper);
     }
 
-    public CachedBodyHttpServletResponse toCachedBodyHttpServletResponse(@NonNull HttpServletResponse response, ObjectMapper mapper) {
+    public CachedBodyHttpServletResponse toCachedBodyHttpServletResponse(@NonNull HttpServletResponse response, CachedBodyHttpServletRequest requestWrapper, ObjectMapper mapper) {
         if (response instanceof CachedBodyHttpServletResponse cachedBodyHttpServletResponse)
             return cachedBodyHttpServletResponse;
-        return new CachedBodyHttpServletResponse(response, mapper);
+        return new CachedBodyHttpServletResponse(response, requestWrapper, mapper);
     }
 
     private static final String[] IP_HEADER_CANDIDATES = {

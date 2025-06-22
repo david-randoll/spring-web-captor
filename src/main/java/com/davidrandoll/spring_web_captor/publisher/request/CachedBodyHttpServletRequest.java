@@ -2,6 +2,8 @@ package com.davidrandoll.spring_web_captor.publisher.request;
 
 import com.davidrandoll.spring_web_captor.event.HttpMethodEnum;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
+import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
+import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,10 +23,12 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.davidrandoll.spring_web_captor.utils.ExceptionUtils.safe;
+import static java.util.Objects.nonNull;
 
 public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     private byte[] cachedBody;
@@ -103,9 +107,8 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     }
 
     public HttpRequestEvent toHttpRequestEvent() {
-        if (this.httpRequestEvent != null) {
-            return this.httpRequestEvent;
-        }
+        if (nonNull(this.httpRequestEvent)) return this.httpRequestEvent;
+
         this.httpRequestEvent = HttpRequestEvent.builder()
                 .endpointExists(this.endpointExists)
                 .fullUrl(this.getFullUrl())
@@ -118,5 +121,14 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
                 .build();
 
         return this.httpRequestEvent;
+    }
+
+    public void publishEvent(List<IHttpEventExtension> httpEventExtensions, IWebCaptorEventPublisher publisher) {
+        var requestEvent = this.toHttpRequestEvent();
+        for (IHttpEventExtension extension : httpEventExtensions) {
+            var additionalData = extension.extendRequestEvent(requestEvent);
+            requestEvent.addAdditionalData(additionalData);
+        }
+        publisher.publishEvent(requestEvent);
     }
 }

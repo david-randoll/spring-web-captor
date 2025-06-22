@@ -1,6 +1,5 @@
 package com.davidrandoll.spring_web_captor.publisher.response;
 
-import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
@@ -21,7 +20,6 @@ import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -34,8 +32,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
-
-import static com.davidrandoll.spring_web_captor.utils.ExceptionUtils.safe;
 
 
 @Slf4j
@@ -61,71 +57,45 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException {
         CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request, objectMapper);
-        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, objectMapper);
+        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper, objectMapper);
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
             buildAndPublishResponseEvent(requestWrapper, responseWrapper);
         } catch (Exception ex) {
-            resolveException(ex, responseWrapper, requestWrapper);
+            responseWrapper.resolveException(ex, handlerExceptionResolver);
         } finally {
             responseWrapper.copyBodyToResponse(); // IMPORTANT: copy response back into original response
         }
     }
 
     private void buildAndPublishResponseEvent(CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) throws IOException {
-        final HttpStatus responseStatus = HttpStatus.valueOf(responseWrapper.getStatus());
-        final HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
-        final HttpResponseEvent responseEvent = createHttpResponseEvent(requestEvent, responseStatus, responseWrapper);
+        final HttpStatus responseStatus = responseWrapper.getResponseStatus();
+        final HttpResponseEvent responseEvent = responseWrapper.toHttpResponseEvent();
 
         if (responseStatus.is2xxSuccessful()) {
-            CompletionStage<JsonNode> responseBody = responseWrapper.getResponseBody(requestWrapper);
+            CompletionStage<JsonNode> responseBody = responseWrapper.getResponseBody();
 
             responseBody.whenComplete((body, throwable) -> {
                 if (throwable != null) {
                     var ex = new RuntimeException(throwable);
-                    resolveException(ex, responseWrapper, requestWrapper);
-                    publishErrorResponseEvent(requestWrapper, responseEvent, requestEvent);
+                    responseWrapper.resolveException(ex, handlerExceptionResolver);
+                    publishErrorResponseEvent(requestWrapper, responseEvent, responseWrapper);
                 } else {
                     responseEvent.setResponseBody(body);
-                    publishResponseEvent(requestEvent, responseEvent);
+                    responseWrapper.publishEvent(httpEventExtensions, publisher);
                 }
             });
         } else {
-            publishErrorResponseEvent(requestWrapper, responseEvent, requestEvent);
+            publishErrorResponseEvent(requestWrapper, responseEvent, responseWrapper);
         }
     }
 
-    private void publishErrorResponseEvent(CachedBodyHttpServletRequest requestWrapper, HttpResponseEvent responseEvent, HttpRequestEvent requestEvent) {
-        var errorAttributes = getErrorAttributes(requestWrapper);
-        responseEvent.addErrorDetail(errorAttributes);
-        publishResponseEvent(requestEvent, responseEvent);
-    }
-
-    private void publishResponseEvent(HttpRequestEvent requestEvent, HttpResponseEvent responseEvent) {
-        for (IHttpEventExtension extension : httpEventExtensions) {
-            var additionalData = extension.extendResponseEvent(requestEvent, responseEvent);
-            responseEvent.addAdditionalData(additionalData);
-        }
-        publisher.publishEvent(responseEvent);
-    }
-
-    private static HttpResponseEvent createHttpResponseEvent(HttpRequestEvent requestEvent, HttpStatus responseStatus, CachedBodyHttpServletResponse responseWrapper) {
-        return new HttpResponseEvent(requestEvent).toBuilder()
-                .responseStatus(responseStatus)
-                .responseHeaders(safe(responseWrapper::getHttpHeaders, new HttpHeaders()))
-                .build();
-    }
-
-    private void resolveException(Exception ex, CachedBodyHttpServletResponse responseWrapper, CachedBodyHttpServletRequest requestWrapper) {
-        responseWrapper.resetBuffer();
-        responseWrapper.setContentType("application/json;charset=UTF-8");
-        handlerExceptionResolver.resolveException(requestWrapper, responseWrapper, null, ex);
-    }
-
-    private Map<String, Object> getErrorAttributes(CachedBodyHttpServletRequest requestWrapper) {
+    private void publishErrorResponseEvent(CachedBodyHttpServletRequest requestWrapper, HttpResponseEvent responseEvent, CachedBodyHttpServletResponse responseWrapper) {
         WebRequest webRequest = new ServletWebRequest(requestWrapper);
         ErrorAttributeOptions options = ErrorAttributeOptions.of(ErrorAttributeOptions.Include.values());
-        return defaultErrorAttributes.getErrorAttributes(webRequest, options);
+        Map<String, Object> errorAttributes = defaultErrorAttributes.getErrorAttributes(webRequest, options);
+        responseEvent.addErrorDetail(errorAttributes);
+        responseWrapper.publishEvent(httpEventExtensions, publisher);
     }
 }

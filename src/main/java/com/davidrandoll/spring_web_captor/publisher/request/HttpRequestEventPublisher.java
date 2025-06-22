@@ -31,20 +31,10 @@ public class HttpRequestEventPublisher implements HandlerInterceptor {
         requestWrapper.setEndpointExists(true);
 
         HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
-        publishRequestEvent(requestEvent);
+        if (!requestEvent.getPath().equalsIgnoreCase("/error")) {
+            requestWrapper.publishEvent(httpEventExtensions, publisher);
+        }
 
         return true;
-    }
-
-    private void publishRequestEvent(HttpRequestEvent requestEvent) {
-        if (requestEvent.getPath().equalsIgnoreCase("/error")) {
-            return;
-        }
-
-        for (IHttpEventExtension extension : httpEventExtensions) {
-            var additionalData = extension.extendRequestEvent(requestEvent);
-            requestEvent.addAdditionalData(additionalData);
-        }
-        publisher.publishEvent(requestEvent);
     }
 }
