@@ -18,6 +18,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
@@ -98,7 +99,24 @@ public class HttpServletUtils {
         }
 
         // if the content type is not JSON, we can try to parse it as a text node
-        var stringBody = new String(cachedBody, StandardCharsets.UTF_8);
+        Charset charSet = getCharsetFromContentType(contentType);
+        var stringBody = new String(cachedBody, charSet);
         return factory.textNode(stringBody);
+    }
+
+    private static Charset getCharsetFromContentType(String contentType) {
+        Charset charset = null;
+        if (contentType != null) {
+            try {
+                MediaType mediaType = MediaType.parseMediaType(contentType);
+                if (mediaType.getCharset() != null) {
+                    charset = mediaType.getCharset();
+                }
+            } catch (Exception e) {
+                // Ignore parsing errors, fallback to UTF-8
+            }
+        }
+        return Optional.ofNullable(charset)
+                .orElse(StandardCharsets.UTF_8);
     }
 }
