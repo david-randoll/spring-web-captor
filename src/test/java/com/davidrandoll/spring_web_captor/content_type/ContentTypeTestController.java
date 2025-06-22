@@ -3,7 +3,9 @@ package com.davidrandoll.spring_web_captor.content_type;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -28,5 +30,21 @@ public class ContentTypeTestController {
     @PostMapping(value = "/text", consumes = MediaType.TEXT_PLAIN_VALUE)
     public String handleText(@RequestBody String body) {
         return "Text received: " + body;
+    }
+
+    @PostMapping(value = "/params", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public String handleContentTypeWithParams(@RequestBody Map<String, Object> body) {
+        return "Content-Type with parameters received: " + body;
+    }
+
+    @PostMapping(value = "/malformed", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public String handleMalformedContentType(@RequestBody Map<String, Object> body) {
+        return "Malformed Content-Type received: " + body;
+    }
+
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String handleUpload(@RequestParam("file") MultipartFile file,
+                               @RequestParam("description") String description) throws IOException {
+        return "Uploaded: " + file.getOriginalFilename() + ", Desc: " + description + ", Content: " + new String(file.getBytes());
     }
 }

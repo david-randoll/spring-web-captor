@@ -94,7 +94,7 @@ public class HttpServletUtils {
             try {
                 return objectMapper.readTree(cachedBody);
             } catch (IOException e) {
-                log.error("Failed to parse JSON from byte array: {}", e.getMessage(), e);
+                //ignore parsing errors, fallback to text node
             }
         }
 

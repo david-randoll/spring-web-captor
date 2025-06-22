@@ -20,6 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -208,4 +210,68 @@ class ContentTypeTestControllerTest {
         assertThat(req.getRequestBody().asText()).contains("unicode-test");
     }
 
+    @Test
+    void testMultipartFormUpload() throws Exception {
+        mockMvc.perform(multipart("/test/content-type/upload")
+                        .file("file", "sample data".getBytes())
+                        .param("description", "test file"))
+                .andExpect(status().isOk());
+
+        HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(req.getHeaders().getContentType().toString()).startsWith("multipart/");
+        assertThat(req.getRequestBody().toString()).contains("sample data");
+        assertThat(req.getRequestBody().toString()).contains("test file");
+    }
+
+    @Test
+    void testInvalidUtf8Body() throws Exception {
+        byte[] invalidUtf8 = {(byte) 0xC3, (byte) 0x28}; // Invalid 2-byte sequence
+
+        mockMvc.perform(post("/test/content-type/json")
+                        .contentType("application/json; charset=UTF-8")
+                        .content(invalidUtf8))
+                .andExpect(status().isBadRequest());
+
+        HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
+        assertEquals("�(", req.getRequestBody().asText());
+    }
+
+    @Test
+    void testContentTypeWithParameters() throws Exception {
+        String body = """
+                {"message": "Hello with profile"}
+                """;
+
+        mockMvc.perform(post("/test/content-type/params")
+                        .contentType("application/json; profile=\"https://example.com/schema\"; charset=UTF-8")
+                        .content(body))
+                .andExpect(status().isOk());
+
+        HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
+
+        var contentType = req.getHeaders().getContentType();
+        // Assert full header string captured
+        assertThat(contentType).isNotNull();
+        assertThat(contentType.toString()).contains("application/json");
+        assertThat(contentType.toString()).contains("profile");
+        assertThat(req.getRequestBody().toString()).contains("Hello with profile");
+    }
+
+    @Test
+    void testMalformedContentTypeTrailingSemicolon() throws Exception {
+        String body = """
+                {"note": "trailing semicolon"}
+                """;
+
+        mockMvc.perform(post("/test/content-type/malformed")
+                        .header("Content-Type", "application/json;") // manually bypass contentType()
+                        .content(body))
+                .andExpect(status().isOk());
+
+        HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
+
+        var contentType = req.getHeaders().getContentType().toString();
+        assertThat(contentType).contains("application/json;");
+        assertThat(req.getRequestBody().toString()).contains("trailing semicolon");
+    }
 }
