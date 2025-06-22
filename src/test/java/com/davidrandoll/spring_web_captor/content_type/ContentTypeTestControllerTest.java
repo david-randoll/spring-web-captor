@@ -11,10 +11,12 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -122,4 +124,88 @@ class ContentTypeTestControllerTest {
         // check that the request body is "not-a-json"
         assertThat(req.getRequestBody().asText()).isEqualTo("not-a-json");
     }
+
+    @Test
+    void testEmptyJsonBodyStillParses() throws Exception {
+        mockMvc.perform(post("/test/content-type/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(""))
+                .andExpect(status().isBadRequest()); // or your app’s behavior
+
+        HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(req.getHeaders().getContentType().toString()).startsWith(MediaType.APPLICATION_JSON_VALUE);
+        assertThat(req.getRequestBody().toString()).isEqualTo("null");
+    }
+
+    @Test
+    void testContentTypeMismatchStillCapturesEvent() throws Exception {
+        String xml = "<person><name>Wrong</name></person>";
+
+        mockMvc.perform(post("/test/content-type/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(xml))
+                .andExpect(status().isBadRequest());
+
+        HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
+        HttpResponseEvent res = eventCaptureListener.getResponseEvents().getFirst();
+
+        assertThat(req.getRequestBody().asText()).contains("<name>");
+        assertThat(res.getResponseStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void testNoContentTypeHeader() throws Exception {
+        String body = "{\"free\":\"form\"}";
+
+        mockMvc.perform(post("/test/content-type/json")
+                        .content(body)) // No content-type!
+                .andExpect(status().isUnsupportedMediaType()); // or 400/415 depending on controller config
+
+        HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(req.getRequestBody().asText()).contains("free");
+        assertThat(req.getHeaders().getContentType()).isNull();
+    }
+
+    @Test
+    void testMultipleContentTypeHeaders() throws Exception {
+        mockMvc.perform(post("/test/content-type/text")
+                        .content("some data")
+                        .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                        .header(HttpHeaders.CONTENT_TYPE, "text/plain"))// duplicate header
+                .andExpect(status().isUnsupportedMediaType()); // likely behavior
+
+        HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(req.getHeaders().get("Content-Type").getFirst()).startsWith(MediaType.APPLICATION_JSON_VALUE);
+        assertThat(req.getRequestBody().asText()).isEqualTo("some data");
+    }
+
+    @Test
+    void testLargeJsonPayload() throws Exception {
+        StringBuilder largeJson = new StringBuilder("{\"data\":\"");
+        largeJson.append("x".repeat(500_000)); // 500 KB
+        largeJson.append("\"}");
+
+        mockMvc.perform(post("/test/content-type/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(largeJson.toString()))
+                .andExpect(status().isOk());
+
+        HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(req.getRequestBody().get("data").asText()).startsWith("x");
+    }
+
+    @Test
+    void testUtf16TextContent() throws Exception {
+        String text = "unicode-test";
+        byte[] utf16Bytes = text.getBytes(StandardCharsets.UTF_16);
+
+        mockMvc.perform(post("/test/content-type/text")
+                        .contentType("text/plain;charset=UTF-16")
+                        .content(utf16Bytes))
+                .andExpect(status().isOk());
+
+        HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(req.getRequestBody().asText()).contains("unicode-test");
+    }
+
 }
