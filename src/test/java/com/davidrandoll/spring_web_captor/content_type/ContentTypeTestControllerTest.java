@@ -279,4 +279,17 @@ class ContentTypeTestControllerTest {
         assertThat(contentType).contains("application/json;");
         assertThat(req.getRequestBody().toString()).contains("trailing semicolon");
     }
+
+    @Test
+    void testObscureCharsetISO88591() throws Exception {
+        String input = "café naïve";
+        byte[] body = input.getBytes(StandardCharsets.ISO_8859_1);
+
+        mockMvc.perform(post("/test/content-type/echo")
+                        .contentType("text/plain;charset=ISO-8859-1")
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.body").value("café naïve"))
+                .andExpect(jsonPath("$.receivedContentType").value("text/plain;charset=ISO-8859-1"));
+    }
 }

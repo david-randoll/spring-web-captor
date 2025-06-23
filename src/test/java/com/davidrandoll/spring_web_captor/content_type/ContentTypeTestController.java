@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -46,5 +47,14 @@ public class ContentTypeTestController {
     public String handleUpload(@RequestParam("file") MultipartFile file,
                                @RequestParam("description") String description) throws IOException {
         return "Uploaded: " + file.getOriginalFilename() + ", Desc: " + description + ", Content: " + new String(file.getBytes());
+    }
+
+    @PostMapping("/echo")
+    public ResponseEntity<Map<String, Object>> echo(@RequestBody(required = false) String body,
+                                                    @RequestHeader(value = "Content-Type", required = false) String contentType) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("receivedContentType", contentType);
+        response.put("body", body);
+        return ResponseEntity.ok(response);
     }
 }
