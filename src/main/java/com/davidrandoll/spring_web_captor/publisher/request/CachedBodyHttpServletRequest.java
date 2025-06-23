@@ -67,7 +67,7 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
         if (this.cachedBody == null) {
             getInputStream(); // Ensure the body is cached
         }
-        return HttpServletUtils.parseByteArrayToJsonNode(this.getContentType(), this.cachedBody, objectMapper);
+        return HttpServletUtils.parseByteArrayToJsonNode(this, this.cachedBody, objectMapper);
     }
 
     public MultiValueMap<String, String> getRequestParams() {

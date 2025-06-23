@@ -5,6 +5,8 @@ import com.davidrandoll.spring_web_captor.publisher.response.CachedBodyHttpServl
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.experimental.UtilityClass;
@@ -16,6 +18,8 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -87,21 +91,57 @@ public class HttpServletUtils {
         return url.replaceAll("/$", "");
     }
 
-    public static JsonNode parseByteArrayToJsonNode(String contentType, byte[] cachedBody, ObjectMapper objectMapper) {
+    public static JsonNode parseByteArrayToJsonNode(CachedBodyHttpServletRequest requestWrapper, byte[] cachedBody, ObjectMapper objectMapper) {
         JsonNodeFactory factory = JsonNodeFactory.instance;
-        if (ObjectUtils.isEmpty(cachedBody)) return factory.nullNode();
-        if (contentType != null && contentType.contains(MediaType.APPLICATION_JSON_VALUE)) {
-            try {
-                return objectMapper.readTree(cachedBody);
-            } catch (IOException e) {
-                //ignore parsing errors, fallback to text node
+        var contentType = requestWrapper.getContentType();
+        if (contentType != null) {
+            if (contentType.contains(MediaType.APPLICATION_JSON_VALUE) && ObjectUtils.isEmpty(cachedBody)) {
+                try {
+                    return objectMapper.readTree(cachedBody);
+                } catch (IOException e) {
+                    //ignore parsing errors, fallback to text node
+                }
+            } else if (contentType.contains("multipart")) {
+                try {
+                    return parseMultiPartRequest(requestWrapper, objectMapper);
+                } catch (Exception e) {
+                    //ignore parsing errors, fallback to text node
+                }
             }
         }
+
+        if (ObjectUtils.isEmpty(cachedBody)) return factory.nullNode();
 
         // if the content type is not JSON, we can try to parse it as a text node
         Charset charSet = getCharsetFromContentType(contentType);
         var stringBody = new String(cachedBody, charSet);
         return factory.textNode(stringBody);
+    }
+
+    public static JsonNode parseMultiPartRequest(CachedBodyHttpServletRequest requestWrapper, ObjectMapper objectMapper) {
+        JsonNodeFactory factory = JsonNodeFactory.instance;
+        MultipartHttpServletRequest multipartRequest = toMultipartHttpServletRequest(requestWrapper.getRequest());
+
+        JsonNode formFieldsNode = objectMapper.convertValue(multipartRequest.getParameterMap(), JsonNode.class);
+
+        ObjectNode objectNode = factory.objectNode();
+        multipartRequest.getMultiFileMap().forEach((key, value) -> {
+            if (!ObjectUtils.isEmpty(value)) {
+                objectNode.putPOJO(key, value);
+            }
+        });
+        formFieldsNode.forEachEntry(objectNode::set);
+        return objectNode;
+    }
+
+    @NonNull
+    private static MultipartHttpServletRequest toMultipartHttpServletRequest(ServletRequest request) {
+        return switch (request) {
+            case MultipartHttpServletRequest multipartHttpServletRequest -> multipartHttpServletRequest;
+            case HttpServletRequest httpServletRequest -> new StandardMultipartHttpServletRequest(httpServletRequest);
+            default ->
+                    throw new IllegalArgumentException("Request must be an instance of HttpServletRequest or MultipartHttpServletRequest");
+        };
     }
 
     private static Charset getCharsetFromContentType(String contentType) {

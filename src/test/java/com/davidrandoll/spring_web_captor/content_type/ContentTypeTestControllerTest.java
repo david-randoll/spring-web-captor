@@ -219,8 +219,9 @@ class ContentTypeTestControllerTest {
 
         HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
         assertThat(req.getHeaders().getContentType().toString()).startsWith("multipart/");
-        assertThat(req.getRequestBody().toString()).contains("sample data");
-        assertThat(req.getRequestBody().toString()).contains("test file");
+        assertThat(req.getRequestBody().get("description").get(0).asText()).isEqualTo("test file");
+        var file = req.getRequestBody().get("file").get(0);
+        assertThat(file.asText()).contains("sample data");
     }
 
     @Test

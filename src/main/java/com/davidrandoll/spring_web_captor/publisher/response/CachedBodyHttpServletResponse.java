@@ -81,7 +81,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
     }
 
     private void getBody(CompletableFuture<JsonNode> future) throws IOException {
-        JsonNode body = HttpServletUtils.parseByteArrayToJsonNode(this.getContentType(), this.getContentAsByteArray(), mapper);
+        JsonNode body = HttpServletUtils.parseByteArrayToJsonNode(this.request, this.getContentAsByteArray(), mapper);
         future.complete(body);
         this.copyBodyToResponse(); // IMPORTANT: copy response back into original response
     }
