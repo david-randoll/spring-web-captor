@@ -148,6 +148,7 @@ public class HttpServletUtils {
                 fileNode.put("filename", file.getOriginalFilename());
                 fileNode.put("contentType", file.getContentType());
                 fileNode.put("size", file.getSize());
+                fileNode.put("name", file.getName());
 
                 try {
                     byte[] bytes = file.getBytes();
