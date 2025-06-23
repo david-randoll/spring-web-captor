@@ -17,7 +17,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -221,9 +220,12 @@ class ContentTypeTestControllerTest {
         HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
         assertThat(req.getHeaders().getContentType().toString()).startsWith("multipart/");
         assertThat(req.getRequestBody().get("description").asText()).isEqualTo("test file");
-        var fileBase64 = req.getRequestBody().get("file").get("content").asText();
-        var fileString = new String(Base64.getDecoder().decode(fileBase64), StandardCharsets.UTF_8);
-        assertThat(fileString).contains("sample data");
+
+        var file = req.getRequestFiles().getFirst("file");
+        assertThat(file).isNotNull();
+        assertThat(file.getName()).isEqualTo("file");
+        // check the file content
+        assertThat(file.getBytes()).isEqualTo("sample data".getBytes(StandardCharsets.UTF_8));
     }
 
     @Test

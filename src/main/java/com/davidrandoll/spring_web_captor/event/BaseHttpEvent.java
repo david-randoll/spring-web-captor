@@ -3,6 +3,7 @@ package com.davidrandoll.spring_web_captor.event;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,9 +13,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static java.util.Objects.isNull;
 
 @Data
 @FieldNameConstants
@@ -29,7 +33,7 @@ public class BaseHttpEvent {
     private HttpHeaders headers;
     private MultiValueMap<String, String> queryParams;
     private Map<String, String> pathParams;
-    private JsonNode requestBody;
+    private RequestBodyPayload requestBodyPayload;
 
     @JsonAnySetter
     @JsonAnyGetter
@@ -51,5 +55,19 @@ public class BaseHttpEvent {
         var value = this.additionalData.get(key);
         if (value == null) return null;
         return type.cast(value);
+    }
+
+    @NonNull
+    public JsonNode getRequestBody() {
+        if (isNull(this.requestBodyPayload))
+            return JsonNodeFactory.instance.nullNode();
+        return this.requestBodyPayload.getBody();
+    }
+
+    @NonNull
+    public MultiValueMap<String, MultipartFile> getRequestFiles() {
+        if (isNull(this.requestBodyPayload) || isNull(this.requestBodyPayload.getFiles()))
+            return MultiValueMap.fromSingleValue(Map.of());
+        return this.requestBodyPayload.getFiles();
     }
 }

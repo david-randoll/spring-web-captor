@@ -2,6 +2,7 @@ package com.davidrandoll.spring_web_captor.publisher.response;
 
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
+import com.davidrandoll.spring_web_captor.event.RequestBodyPayload;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
@@ -81,8 +82,8 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
     }
 
     private void getBody(CompletableFuture<JsonNode> future) throws IOException {
-        JsonNode body = HttpServletUtils.parseByteArrayToJsonNode(this.request, this.getContentAsByteArray(), mapper);
-        future.complete(body);
+        RequestBodyPayload payload = HttpServletUtils.parseByteArrayToJsonNode(this.request, this.getContentAsByteArray(), mapper);
+        future.complete(payload.getBody());
         this.copyBodyToResponse(); // IMPORTANT: copy response back into original response
     }
 

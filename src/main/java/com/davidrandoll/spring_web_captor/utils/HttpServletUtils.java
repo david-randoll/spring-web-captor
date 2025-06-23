@@ -1,8 +1,8 @@
 package com.davidrandoll.spring_web_captor.utils;
 
+import com.davidrandoll.spring_web_captor.event.RequestBodyPayload;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.response.CachedBodyHttpServletResponse;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -19,14 +19,12 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Optional;
 
 @Slf4j
@@ -94,34 +92,35 @@ public class HttpServletUtils {
         return url.replaceAll("/$", "");
     }
 
-    public static JsonNode parseByteArrayToJsonNode(CachedBodyHttpServletRequest requestWrapper, byte[] cachedBody, ObjectMapper objectMapper) {
+    public static RequestBodyPayload parseByteArrayToJsonNode(CachedBodyHttpServletRequest requestWrapper, byte[] cachedBody, ObjectMapper objectMapper) {
         JsonNodeFactory factory = JsonNodeFactory.instance;
         var contentType = requestWrapper.getContentType();
         if (contentType != null) {
             if (contentType.contains("json") && !ObjectUtils.isEmpty(cachedBody)) {
                 try {
-                    return objectMapper.readTree(cachedBody);
+                    return new RequestBodyPayload(objectMapper.readTree(cachedBody));
                 } catch (IOException e) {
                     //ignore parsing errors, fallback to text node
                 }
             } else if (contentType.contains("multipart")) {
                 try {
-                    return parseMultiPartRequest(requestWrapper, objectMapper);
+                    return parseMultiPartRequest(requestWrapper);
                 } catch (Exception e) {
                     //ignore parsing errors, fallback to text node
                 }
             }
         }
 
-        if (ObjectUtils.isEmpty(cachedBody)) return factory.nullNode();
+        if (ObjectUtils.isEmpty(cachedBody))
+            return new RequestBodyPayload(factory.nullNode());
 
         // if the content type is not JSON, we can try to parse it as a text node
         Charset charSet = getCharsetFromContentType(contentType);
         var stringBody = new String(cachedBody, charSet);
-        return factory.textNode(stringBody);
+        return new RequestBodyPayload(factory.textNode(stringBody));
     }
 
-    public static JsonNode parseMultiPartRequest(CachedBodyHttpServletRequest requestWrapper, ObjectMapper objectMapper) {
+    public static RequestBodyPayload parseMultiPartRequest(CachedBodyHttpServletRequest requestWrapper) {
         JsonNodeFactory factory = JsonNodeFactory.instance;
         // IMPORTANT: Need to do requestWrapper.getRequest() instead of directly using the wrapper
         // using just the wrapper won't get the files for some reason but the .getRequest does
@@ -140,30 +139,7 @@ public class HttpServletUtils {
             }
         });
 
-        // Convert files
-        multipartRequest.getMultiFileMap().forEach((key, files) -> {
-            ArrayNode fileArray = factory.arrayNode();
-            for (MultipartFile file : files) {
-                ObjectNode fileNode = factory.objectNode();
-                fileNode.put("filename", file.getOriginalFilename());
-                fileNode.put("contentType", file.getContentType());
-                fileNode.put("size", file.getSize());
-                fileNode.put("name", file.getName());
-
-                try {
-                    byte[] bytes = file.getBytes();
-                    String base64 = Base64.getEncoder().encodeToString(bytes);
-                    fileNode.put("content", base64);
-                } catch (IOException e) {
-                    fileNode.put("error", "Failed to read file content: " + e.getMessage());
-                }
-
-                fileArray.add(fileNode);
-            }
-
-            objectNode.set(key, fileArray.size() == 1 ? fileArray.get(0) : fileArray);
-        });
-        return objectNode;
+        return new RequestBodyPayload(objectNode, multipartRequest.getMultiFileMap());
     }
 
     @NonNull

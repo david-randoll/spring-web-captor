@@ -2,10 +2,10 @@ package com.davidrandoll.spring_web_captor.publisher.request;
 
 import com.davidrandoll.spring_web_captor.event.HttpMethodEnum;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
+import com.davidrandoll.spring_web_captor.event.RequestBodyPayload;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -63,7 +63,7 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     }
 
     @SneakyThrows
-    public JsonNode getBody() {
+    public RequestBodyPayload getBody() {
         if (this.cachedBody == null) {
             getInputStream(); // Ensure the body is cached
         }
@@ -118,7 +118,7 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
                 .headers(safe(this::getHttpHeaders, new HttpHeaders()))
                 .queryParams(safe(this::getRequestParams, new LinkedMultiValueMap<>()))
                 .pathParams(safe(this::getPathVariables, Collections.emptyMap()))
-                .requestBody(safe(this::getBody, null))
+                .requestBodyPayload(safe(this::getBody, null))
                 .build();
 
         return this.httpRequestEvent;
