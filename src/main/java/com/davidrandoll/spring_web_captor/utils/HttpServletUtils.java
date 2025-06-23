@@ -4,6 +4,7 @@ import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServle
 import com.davidrandoll.spring_web_captor.publisher.response.CachedBodyHttpServletResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.ServletRequest;
@@ -18,12 +19,14 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Optional;
 
 @Slf4j
@@ -120,17 +123,45 @@ public class HttpServletUtils {
 
     public static JsonNode parseMultiPartRequest(CachedBodyHttpServletRequest requestWrapper, ObjectMapper objectMapper) {
         JsonNodeFactory factory = JsonNodeFactory.instance;
+        // IMPORTANT: Need to do requestWrapper.getRequest() instead of directly using the wrapper
+        // using just the wrapper won't get the files for some reason but the .getRequest does
         MultipartHttpServletRequest multipartRequest = toMultipartHttpServletRequest(requestWrapper.getRequest());
 
-        JsonNode formFieldsNode = objectMapper.convertValue(multipartRequest.getParameterMap(), JsonNode.class);
-
         ObjectNode objectNode = factory.objectNode();
-        multipartRequest.getMultiFileMap().forEach((key, value) -> {
-            if (!ObjectUtils.isEmpty(value)) {
-                objectNode.putPOJO(key, value);
+        multipartRequest.getParameterMap().forEach((key, values) -> {
+            if (values.length == 1) {
+                objectNode.put(key, values[0]);
+            } else {
+                ArrayNode arrayNode = factory.arrayNode();
+                for (String val : values) {
+                    arrayNode.add(val);
+                }
+                objectNode.set(key, arrayNode);
             }
         });
-        formFieldsNode.forEachEntry(objectNode::set);
+
+        // Convert files
+        multipartRequest.getMultiFileMap().forEach((key, files) -> {
+            ArrayNode fileArray = factory.arrayNode();
+            for (MultipartFile file : files) {
+                ObjectNode fileNode = factory.objectNode();
+                fileNode.put("filename", file.getOriginalFilename());
+                fileNode.put("contentType", file.getContentType());
+                fileNode.put("size", file.getSize());
+
+                try {
+                    byte[] bytes = file.getBytes();
+                    String base64 = Base64.getEncoder().encodeToString(bytes);
+                    fileNode.put("content", base64);
+                } catch (IOException e) {
+                    fileNode.put("error", "Failed to read file content: " + e.getMessage());
+                }
+
+                fileArray.add(fileNode);
+            }
+
+            objectNode.set(key, fileArray.size() == 1 ? fileArray.get(0) : fileArray);
+        });
         return objectNode;
     }
 
