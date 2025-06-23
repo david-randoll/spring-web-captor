@@ -98,7 +98,7 @@ public class HttpServletUtils {
         JsonNodeFactory factory = JsonNodeFactory.instance;
         var contentType = requestWrapper.getContentType();
         if (contentType != null) {
-            if (contentType.contains(MediaType.APPLICATION_JSON_VALUE) && ObjectUtils.isEmpty(cachedBody)) {
+            if (contentType.contains("json") && !ObjectUtils.isEmpty(cachedBody)) {
                 try {
                     return objectMapper.readTree(cachedBody);
                 } catch (IOException e) {
