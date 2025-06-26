@@ -16,6 +16,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -212,5 +214,100 @@ class HttpRequestEventQueryParamTest {
 
         var req = eventCaptureListener.getRequestEvents().getFirst();
         assertThat(req.getQueryParams().get("q")).containsExactly("hello world!@#");
+    }
+
+    @Test
+    void testParamWithSpaces() throws Exception {
+        mockMvc.perform(get("/test/query/basic?name=John Doe"))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(event.getQueryParams().get("name")).containsExactly("John Doe");
+    }
+
+    @Test
+    void testParamWithSpecialCharacters() throws Exception {
+        mockMvc.perform(get("/test/query/basic?symbols=@$!/"))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(event.getQueryParams().get("symbols")).containsExactly("@$!/");
+    }
+
+    @Test
+    void testEmptyQueryString() throws Exception {
+        mockMvc.perform(get("/test/query/basic?"))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertTrue(event.getQueryParams().isEmpty());
+    }
+
+    @Test
+    void testQueryStringWithOnlyDelimiters() throws Exception {
+        mockMvc.perform(get("/test/query/basic?&&"))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertTrue(event.getQueryParams().isEmpty());
+    }
+
+    @Test
+    void testEqualsWithoutValue() throws Exception {
+        mockMvc.perform(get("/test/query/basic?keyOnly="))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertTrue(event.getQueryParams().containsKey("keyOnly"));
+        assertThat(event.getQueryParams().get("keyOnly")).containsExactly("");
+    }
+
+    @Test
+    void testUnencodedBracketsInKeys() throws Exception {
+        mockMvc.perform(get("/test/query/basic?filter[status]=active"))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(event.getQueryParams().get("filter[status]")).containsExactly("active");
+    }
+
+    @Test
+    void testEncodedBracketsInKeys() throws Exception {
+        mockMvc.perform(get("/test/query/basic?filter[type]=pdf"))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(event.getQueryParams().get("filter[type]")).containsExactly("pdf");
+    }
+
+    @Test
+    void testNullValueParamsAreNotLost() throws Exception {
+        mockMvc.perform(get("/test/query/basic?foo&bar=123"))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertTrue(event.getQueryParams().containsKey("foo"));
+        assertNull(event.getQueryParams().get("foo").getFirst());
+        assertThat(event.getQueryParams().get("bar")).containsExactly("123");
+    }
+
+    @Test
+    void testParamKeyCaseSensitivity() throws Exception {
+        mockMvc.perform(get("/test/query/basic?Key=value1&key=value2"))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(event.getQueryParams().get("Key")).containsExactly("value1");
+        assertThat(event.getQueryParams().get("key")).containsExactly("value2");
+    }
+
+    @Test
+    void testMultiValueOrderingPreserved() throws Exception {
+        mockMvc.perform(get("/test/query/multi?status=active&status=pending&status=done"))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(event.getQueryParams().get("status"))
+                .containsExactly("active", "pending", "done");
     }
 }
