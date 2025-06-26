@@ -12,9 +12,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpInputMessage;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -95,19 +99,18 @@ public class HttpServletUtils {
     public static RequestBodyPayload parseByteArrayToJsonNode(CachedBodyHttpServletRequest requestWrapper, byte[] cachedBody, ObjectMapper objectMapper) {
         JsonNodeFactory factory = JsonNodeFactory.instance;
         var contentType = requestWrapper.getContentType();
+        Charset charSet = getCharsetFromContentType(contentType);
         if (contentType != null) {
-            if (contentType.contains("json") && !ObjectUtils.isEmpty(cachedBody)) {
-                try {
+            try {
+                if (contentType.contains("json") && !ObjectUtils.isEmpty(cachedBody)) {
                     return new RequestBodyPayload(objectMapper.readTree(cachedBody));
-                } catch (IOException e) {
-                    //ignore parsing errors, fallback to text node
-                }
-            } else if (contentType.contains("multipart")) {
-                try {
+                } else if (contentType.contains("multipart")) {
                     return parseMultiPartRequest(requestWrapper);
-                } catch (Exception e) {
-                    //ignore parsing errors, fallback to text node
+                } else if (contentType.contains("x-www-form-urlencoded")) {
+                    return parseFormUrlEncodedBody(requestWrapper);
                 }
+            } catch (IOException e) {
+                //ignore parsing errors, fallback to text node
             }
         }
 
@@ -115,7 +118,6 @@ public class HttpServletUtils {
             return new RequestBodyPayload(factory.nullNode());
 
         // if the content type is not JSON, we can try to parse it as a text node
-        Charset charSet = getCharsetFromContentType(contentType);
         var stringBody = new String(cachedBody, charSet);
         return new RequestBodyPayload(factory.textNode(stringBody));
     }
@@ -142,6 +144,26 @@ public class HttpServletUtils {
         return new RequestBodyPayload(objectNode, multipartRequest.getMultiFileMap());
     }
 
+    public static RequestBodyPayload parseFormUrlEncodedBody(CachedBodyHttpServletRequest requestWrapper) throws IOException {
+        JsonNodeFactory factory = JsonNodeFactory.instance;
+        ObjectNode objectNode = factory.objectNode();
+        FormHttpMessageConverter converter = new FormHttpMessageConverter();
+        HttpInputMessage inputMessage = toHttpInputMessage(requestWrapper.getRequest());
+        MultiValueMap<String, String> formData = converter.read(null, inputMessage);
+        formData.forEach((key, values) -> {
+            if (values.size() == 1) {
+                objectNode.put(key, values.getFirst());
+            } else {
+                ArrayNode arrayNode = factory.arrayNode();
+                for (String value : values) {
+                    arrayNode.add(value);
+                }
+                objectNode.set(key, arrayNode);
+            }
+        });
+        return new RequestBodyPayload(objectNode);
+    }
+
     @NonNull
     private static MultipartHttpServletRequest toMultipartHttpServletRequest(ServletRequest request) {
         return switch (request) {
@@ -149,6 +171,16 @@ public class HttpServletUtils {
             case HttpServletRequest httpServletRequest -> new StandardMultipartHttpServletRequest(httpServletRequest);
             default ->
                     throw new IllegalArgumentException("Request must be an instance of HttpServletRequest or MultipartHttpServletRequest");
+        };
+    }
+
+    @NonNull
+    private static HttpInputMessage toHttpInputMessage(ServletRequest request) {
+        return switch (request) {
+            case HttpInputMessage httpInputMessage -> httpInputMessage;
+            case HttpServletRequest httpServletRequest -> new ServletServerHttpRequest(httpServletRequest);
+            default ->
+                    throw new IllegalArgumentException("Request must be an instance of HttpServletRequest or HttpInputMessage");
         };
     }
 

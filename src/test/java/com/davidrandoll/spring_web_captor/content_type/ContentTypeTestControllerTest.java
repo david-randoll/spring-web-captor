@@ -4,7 +4,6 @@ import com.davidrandoll.spring_web_captor.WebCaptorApplication;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
 import com.davidrandoll.spring_web_captor.setup.EventCaptureListener;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -34,9 +33,6 @@ class ContentTypeTestControllerTest {
 
     @Autowired
     private EventCaptureListener eventCaptureListener; // Capture published events
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
