@@ -2,7 +2,6 @@ package com.davidrandoll.spring_web_captor.header;
 
 import com.davidrandoll.spring_web_captor.WebCaptorApplication;
 import com.davidrandoll.spring_web_captor.setup.EventCaptureListener;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -25,10 +24,7 @@ class HeaderTestControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private EventCaptureListener eventCaptureListener; // Capture published events
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    private EventCaptureListener eventCaptureListener;
 
     @BeforeEach
     void setUp() {
