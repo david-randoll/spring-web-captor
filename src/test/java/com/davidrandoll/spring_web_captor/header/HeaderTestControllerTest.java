@@ -115,4 +115,56 @@ class HeaderTestControllerTest {
         assertThat(event.getHeaders().get("X-One")).containsExactly("one");
         assertThat(event.getHeaders().get("X-Two")).containsExactly("two");
     }
+
+    @Test
+    void testVeryLargeHeaderValue() throws Exception {
+        String largeValue = "x".repeat(8000); // 8 KB
+        mockMvc.perform(get("/test/headers/basic").header("X-Large", largeValue))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(event.getHeaders().get("x-large")).containsExactly(largeValue);
+    }
+
+    @Test
+    void testCommaSeparatedHeader() throws Exception {
+        mockMvc.perform(get("/test/headers/multi")
+                        .header("X-Test", "a, b"))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(event.getHeaders().get("X-Test")).containsExactly("a, b");
+    }
+
+    @Test
+    void testUnicodeHeader() throws Exception {
+        mockMvc.perform(get("/test/headers/basic")
+                        .header("X-Emoji", "💡🔥"))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(event.getHeaders().get("X-Emoji")).containsExactly("💡🔥");
+    }
+
+    @Test
+    void testHeaderWithTrailingSpaces() throws Exception {
+        mockMvc.perform(get("/test/headers/basic")
+                        .header("X-Test", "value "))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(event.getHeaders().get("X-Test")).containsExactly("value ");
+    }
+
+    @Test
+    void testQuotedHeaderValue() throws Exception {
+        mockMvc.perform(get("/test/headers/basic")
+                        .header("X-Test", "\"quoted\""))
+                .andExpect(status().isOk());
+
+        var event = eventCaptureListener.getRequestEvents().getFirst();
+        assertThat(event.getHeaders().get("X-Test")).containsExactly("\"quoted\"");
+    }
+
+
 }
