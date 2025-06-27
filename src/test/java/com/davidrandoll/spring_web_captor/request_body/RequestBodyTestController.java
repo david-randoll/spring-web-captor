@@ -3,6 +3,7 @@ package com.davidrandoll.spring_web_captor.request_body;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -33,6 +34,12 @@ public class RequestBodyTestController {
     @PostMapping(value = "/form", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<String> form(@RequestParam Map<String, String> form) {
         return ResponseEntity.ok("Form OK");
+    }
+
+    @PostMapping(value = "/multipart", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> multipart(@RequestParam("file") MultipartFile file,
+                                            @RequestParam(value = "description", required = false) String description) {
+        return ResponseEntity.ok("Multipart OK");
     }
 }
 
