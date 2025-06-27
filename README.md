@@ -1,2 +1,95 @@
-# spring-web-captor
-A Spring Web library that intercepts and captures HTTP request and response data—including URI, path, query parameters, headers, and body—and publishes structured events for observability, auditing, or automation.
+# Spring Web Captor
+
+A Spring Web library that intercepts and captures HTTP request/response data-including URI, path, query parameters, headers, and request/response body (including files) and publishes an event with this data.
+
+## Features
+
+- **Automatic HTTP interception:** Captures all incoming HTTP requests and outgoing responses in your Spring Boot application.
+- **Rich event data:** Publishes events containing details such as method, path, query/path parameters, headers, and full request/response.
+- **Multipart & file support:** Handles multipart/form-data and file uploads.
+- **Content type handling:** Supports JSON, XML, plain text, form data, and more.
+- **Spring Boot integration:** Provides auto-configuration for easy setup in Spring Boot projects.
+
+## Usage
+
+1. **Add to your Spring Boot project:**
+   
+   \*comming soon\* (Publish to Maven Central or GitHub Packages and add dependency instructions here.)
+
+2. **Listen for HTTP events:**
+
+   Implement an event listener for `HttpRequestEvent` and `HttpResponseEvent` to handle captured traffic.
+
+   ```java
+   @EventListener
+   public void handleRequest(HttpRequestEvent event) {
+       // Access event.getMethod(), event.getPath(), event.getRequestBody(), etc.
+   }
+   ```
+   or for response body
+   ```java
+   @EventListener
+   public void handleRequest(HttpResponseEvent event) {
+       // Access event.getMethod(), event.getPath(), event.getResponseBody(), etc.
+   }
+   ```
+
+## Custom Event Publisher
+
+By default, Spring Web Captor uses Spring's `ApplicationEventPublisher` to publish web capture events. However, if you prefer not to use `ApplicationEventPublisher`, you can provide your own implementation of the `IWebCaptorEventPublisher` interface.
+
+For example, you could publish events to a message broker such as RabbitMQ, Kafka, or any other system as needed.
+
+### Example
+
+```java
+@Component
+public class MyCustomEventPublisher implements IWebCaptorEventPublisher {
+    @Override
+    public void publishEvent(Object event) {
+        // Example: publish to RabbitMQ, Kafka, or any other system
+        System.out.println("Captured event: " + event);
+    }
+}
+```
+
+You can then configure your application to use this custom publisher when setting up the web captor.
+
+## Captured Data
+
+- **Request:**
+  - Method (GET, POST, PUT, PATCH, DELETE etc.)
+  - Full URL and Path
+  - Query parameters
+  - Path Variables
+  - Headers (including multiple values)
+  - Body (JSON, XML, form-data, files, etc.)
+
+- **Response:**
+  - All fields from the request event
+  - Status code
+  - Headers
+  - Response Body
+ 
+## Contributing
+
+Contributions are welcome! If you have suggestions for improvements or bug fixes, feel free to open an issue or submit a pull request.
+
+To contribute:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Make your changes and include tests if applicable.
+4. Open a pull request describing your changes.
+
+Please ensure your code follows the existing style and passes any automated checks.
+
+Thank you for helping improve this project!
+
+## License
+
+MIT License
+
+---
+
+**Author:** [david-randoll](https://github.com/david-randoll)
