@@ -34,6 +34,27 @@ A Spring Web library that intercepts and captures HTTP request/response data-inc
    }
    ```
 
+## Custom Event Publisher
+
+By default, Spring Web Captor uses Spring's `ApplicationEventPublisher` to publish web capture events. However, if you prefer not to use `ApplicationEventPublisher`, you can provide your own implementation of the `IWebCaptorEventPublisher` interface.
+
+For example, you could publish events to a message broker such as RabbitMQ, Kafka, or any other system as needed.
+
+### Example
+
+```java
+@Component
+public class MyCustomEventPublisher implements IWebCaptorEventPublisher {
+    @Override
+    public void publishEvent(Object event) {
+        // Example: publish to RabbitMQ, Kafka, or any other system
+        System.out.println("Captured event: " + event);
+    }
+}
+```
+
+You can then configure your application to use this custom publisher when setting up the web captor.
+
 ## Captured Data
 
 - **Request:**
