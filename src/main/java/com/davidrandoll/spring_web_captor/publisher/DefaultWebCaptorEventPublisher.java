@@ -1,13 +1,10 @@
-package com.davidrandoll.spring_web_captor.setup;
+package com.davidrandoll.spring_web_captor.publisher;
 
-import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
-@Component
 @RequiredArgsConstructor
-public class SpringApplicationEventPublisher implements IWebCaptorEventPublisher {
+public class DefaultWebCaptorEventPublisher implements IWebCaptorEventPublisher {
     private final ApplicationEventPublisher publisher;
 
     @Override
