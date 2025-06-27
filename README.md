@@ -70,6 +70,21 @@ You can then configure your application to use this custom publisher when settin
   - Status code
   - Headers
   - Response Body
+ 
+## Contributing
+
+Contributions are welcome! If you have suggestions for improvements or bug fixes, feel free to open an issue or submit a pull request.
+
+To contribute:
+
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Make your changes and include tests if applicable.
+4. Open a pull request describing your changes.
+
+Please ensure your code follows the existing style and passes any automated checks.
+
+Thank you for helping improve this project!
 
 ## License
 
