@@ -1,9 +1,10 @@
 package com.davidrandoll.spring_web_captor.publisher;
 
+import com.davidrandoll.spring_web_captor.properties.IsWebCaptorEnabled;
 import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.response.RuntimeExceptionResolver;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -12,10 +13,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
-@Configuration("webConfig")
+@Configuration("webCaptorWebConfig")
 @EnableWebMvc
 @RequiredArgsConstructor
-@ConditionalOnMissingBean(name = "webConfig", ignored = WebConfig.class)
+@Conditional(IsWebCaptorEnabled.class)
 public class WebConfig implements WebMvcConfigurer {
     private final HttpRequestEventPublisher httpRequestEventPublisher;
     private final RuntimeExceptionResolver runtimeExceptionResolver;

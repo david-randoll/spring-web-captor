@@ -3,3 +3,7 @@ server:
 
 web-captor:
   enabled: false
+
+logging:
+  level:
+    com.davidrandoll.spring_web_captor: DEBUG
