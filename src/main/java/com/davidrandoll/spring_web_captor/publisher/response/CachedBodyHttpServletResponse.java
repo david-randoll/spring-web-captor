@@ -110,8 +110,12 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         HttpRequestEvent requestEvent = this.request.toHttpRequestEvent();
         HttpResponseEvent responseEvent = this.toHttpResponseEvent();
         for (IHttpEventExtension extension : httpEventExtensions) {
-            var additionalData = extension.enrichResponseEvent(this.request, this, requestEvent, responseEvent);
-            responseEvent.addAdditionalData(additionalData);
+            try {
+                var additionalData = extension.enrichResponseEvent(this.request, this, requestEvent, responseEvent);
+                responseEvent.addAdditionalData(additionalData);
+            } catch (Exception e) {
+                log.error("Error enriching response event with extension: {}", extension.getClass().getName(), e);
+            }
         }
         publisher.publishEvent(responseEvent);
         this.isPublished = true;

@@ -57,6 +57,15 @@ public class BaseHttpEvent {
         return type.cast(value);
     }
 
+    public boolean hasAdditionalData(String key) {
+        return this.additionalData != null && this.additionalData.containsKey(key);
+    }
+
+    public void removeAdditionalData(String key) {
+        if (this.additionalData == null) return;
+        this.additionalData.remove(key);
+    }
+
     @NonNull
     public JsonNode getRequestBody() {
         if (isNull(this.bodyPayload))

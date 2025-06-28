@@ -6,41 +6,37 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-@Component("httpDurationFilterExtension")
-@RequiredArgsConstructor
-@Order(Ordered.HIGHEST_PRECEDENCE)
-@ConditionalOnMissingBean(name = "httpDurationFilterExtension")
 public class HttpDurationFilterExtension extends OncePerRequestFilter implements IHttpEventExtension {
-    private final ThreadLocal<Long> timeStartLocal = new InheritableThreadLocal<>();
+    private static final String START_TIME_KEY = "startTime";
+    private static final String END_TIME_KEY = "endTime";
+    private static final String DURATION_KEY = "duration";
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        timeStartLocal.set(System.currentTimeMillis());
+        request.setAttribute(START_TIME_KEY, System.currentTimeMillis());
         filterChain.doFilter(request, response);
-        timeStartLocal.remove();
     }
 
     @Override
     public Map<String, Object> enrichResponseEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent reqEvent, HttpResponseEvent resEvent) {
-        var result = new HashMap<String, Object>();
-        var timeStart = timeStartLocal.get();
-        Duration duration = Duration.ofMillis(System.currentTimeMillis() - timeStart);
-        result.put("duration", duration);
-        return result;
+        Object startTimeObj = req.getAttribute(START_TIME_KEY);
+        if (!(startTimeObj instanceof Long startTime)) return Map.of();
+        var endTime = System.currentTimeMillis();
+
+        Duration duration = Duration.ofMillis(endTime - startTime);
+        return Map.of(
+                DURATION_KEY, duration,
+                START_TIME_KEY, startTime,
+                END_TIME_KEY, endTime
+        );
     }
 }

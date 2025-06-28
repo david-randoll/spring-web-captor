@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
 import org.springframework.util.LinkedMultiValueMap;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 import static com.davidrandoll.spring_web_captor.utils.ExceptionUtils.safe;
 import static java.util.Objects.nonNull;
 
+@Slf4j
 public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     private final IBodyParserRegistry bodyParserRegistry;
 
@@ -130,8 +132,12 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
         if (this.isPublished) return;
         var requestEvent = this.toHttpRequestEvent();
         for (IHttpEventExtension extension : httpEventExtensions) {
-            var additionalData = extension.enrichRequestEvent(this, response, requestEvent);
-            requestEvent.addAdditionalData(additionalData);
+            try {
+                var additionalData = extension.enrichRequestEvent(this, response, requestEvent);
+                requestEvent.addAdditionalData(additionalData);
+            } catch (Exception e) {
+                log.error("Error enriching request event with extension: {}", extension.getClass().getName(), e);
+            }
         }
         publisher.publishEvent(requestEvent);
         this.isPublished = true;
