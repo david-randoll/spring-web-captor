@@ -4,9 +4,9 @@ server:
 web-captor:
   enabled: true
   additional-details:
-    user-agent: false
-    ip-address: false
-    duration: false
+    user-agent: true
+    ip-address: true
+    duration: true
 
 logging:
   level:
