@@ -6,15 +6,15 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
-public class RequestBodyPayload {
+public class BodyPayload {
     private JsonNode body;
     private MultiValueMap<String, MultipartFile> files;
 
-    public RequestBodyPayload(JsonNode body) {
+    public BodyPayload(JsonNode body) {
         this.body = body;
     }
 
-    public RequestBodyPayload(JsonNode body, MultiValueMap<String, MultipartFile> files) {
+    public BodyPayload(JsonNode body, MultiValueMap<String, MultipartFile> files) {
         this.body = body;
         this.files = files;
     }

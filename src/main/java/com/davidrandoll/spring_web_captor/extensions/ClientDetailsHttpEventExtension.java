@@ -1,8 +1,7 @@
-package com.davidrandoll.spring_web_captor.setup;
+package com.davidrandoll.spring_web_captor.extensions;
 
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
-import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +20,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @ConditionalOnMissingBean(name = "clientDetailsHttpEventExtension", ignored = {ClientDetailsHttpEventExtension.class})
 public class ClientDetailsHttpEventExtension implements IHttpEventExtension {
+
+    public static final String USER_IP = "userIp";
+    public static final String USER_AGENT = "userAgent";
+
     @Override
     public Map<String, Object> extendRequestEvent(HttpRequestEvent requestEvent) {
         return getClientDetails();
@@ -33,8 +36,8 @@ public class ClientDetailsHttpEventExtension implements IHttpEventExtension {
 
     private Map<String, Object> getClientDetails() {
         Map<String, Object> defaultResponse = Map.of(
-                "user_ip", "Unknown",
-                "user_agent", "Unknown"
+                USER_IP, "Unknown",
+                USER_AGENT, "Unknown"
         );
         try {
             var request = HttpServletUtils.getCurrentHttpRequest();
@@ -44,8 +47,8 @@ public class ClientDetailsHttpEventExtension implements IHttpEventExtension {
             var userAgent = Optional.ofNullable(request.getHeader("User-Agent"))
                     .orElse("Unknown");
             return Map.of(
-                    "user_ip", ip,
-                    "user_agent", userAgent
+                    USER_IP, ip,
+                    USER_AGENT, userAgent
             );
         } catch (Exception e) {
             log.error("Error getting client details", e);

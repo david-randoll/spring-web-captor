@@ -1,12 +1,12 @@
 package com.davidrandoll.spring_web_captor.publisher.response;
 
+import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPublisher;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,7 +38,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     private final IWebCaptorEventPublisher publisher;
     private final DefaultErrorAttributes defaultErrorAttributes;
     private final List<IHttpEventExtension> httpEventExtensions;
-    private final ObjectMapper objectMapper;
+    private final IBodyParserRegistry bodyParserRegistry;
 
     @Autowired
     @Qualifier("handlerExceptionResolver")
@@ -51,8 +51,8 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
      */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException {
-        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request, objectMapper);
-        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper, objectMapper);
+        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request, bodyParserRegistry);
+        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper, bodyParserRegistry);
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);

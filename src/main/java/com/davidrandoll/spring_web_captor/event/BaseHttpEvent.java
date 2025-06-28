@@ -33,7 +33,7 @@ public class BaseHttpEvent {
     private HttpHeaders headers;
     private MultiValueMap<String, String> queryParams;
     private Map<String, String> pathParams;
-    private RequestBodyPayload requestBodyPayload;
+    private BodyPayload bodyPayload;
 
     @JsonAnySetter
     @JsonAnyGetter
@@ -59,15 +59,15 @@ public class BaseHttpEvent {
 
     @NonNull
     public JsonNode getRequestBody() {
-        if (isNull(this.requestBodyPayload))
+        if (isNull(this.bodyPayload))
             return JsonNodeFactory.instance.nullNode();
-        return this.requestBodyPayload.getBody();
+        return this.bodyPayload.getBody();
     }
 
     @NonNull
     public MultiValueMap<String, MultipartFile> getRequestFiles() {
-        if (isNull(this.requestBodyPayload) || isNull(this.requestBodyPayload.getFiles()))
+        if (isNull(this.bodyPayload) || isNull(this.bodyPayload.getFiles()))
             return MultiValueMap.fromSingleValue(Map.of());
-        return this.requestBodyPayload.getFiles();
+        return this.bodyPayload.getFiles();
     }
 }

@@ -1,12 +1,11 @@
 package com.davidrandoll.spring_web_captor.publisher.request;
 
+import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
 import com.davidrandoll.spring_web_captor.event.HttpMethodEnum;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
-import com.davidrandoll.spring_web_captor.event.RequestBodyPayload;
+import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
-import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
@@ -31,6 +30,8 @@ import static com.davidrandoll.spring_web_captor.utils.ExceptionUtils.safe;
 import static java.util.Objects.nonNull;
 
 public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
+    private final IBodyParserRegistry bodyParserRegistry;
+
     private byte[] cachedBody;
     @Getter
     @Setter
@@ -38,11 +39,10 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
 
     private boolean isPublished = false;
     private HttpRequestEvent httpRequestEvent;
-    private final ObjectMapper objectMapper;
 
-    public CachedBodyHttpServletRequest(HttpServletRequest request, ObjectMapper objectMapper) {
+    public CachedBodyHttpServletRequest(HttpServletRequest request, IBodyParserRegistry bodyParserRegistry) {
         super(request);
-        this.objectMapper = objectMapper;
+        this.bodyParserRegistry = bodyParserRegistry;
     }
 
     @Override
@@ -63,11 +63,12 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     }
 
     @SneakyThrows
-    public RequestBodyPayload getBody() {
+    public BodyPayload getBody() {
         if (this.cachedBody == null) {
             getInputStream(); // Ensure the body is cached
         }
-        return HttpServletUtils.parseByteArrayToJsonNode(this, this.cachedBody, objectMapper);
+
+        return this.bodyParserRegistry.parse(this.getRequest(), this.cachedBody);
     }
 
     public MultiValueMap<String, String> getRequestParams() {
@@ -118,7 +119,7 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
                 .headers(safe(this::getHttpHeaders, new HttpHeaders()))
                 .queryParams(safe(this::getRequestParams, new LinkedMultiValueMap<>()))
                 .pathParams(safe(this::getPathVariables, Collections.emptyMap()))
-                .requestBodyPayload(safe(this::getBody, null))
+                .bodyPayload(safe(this::getBody, null))
                 .build();
 
         return this.httpRequestEvent;
