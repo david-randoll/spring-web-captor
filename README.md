@@ -64,12 +64,12 @@ For example, the provided `ClientDetailsHttpEventExtension` implementation uses 
 ```java
 public class ClientDetailsHttpEventExtension implements IHttpEventExtension {
      @Override
-    public Map<String, Object> extendRequestEvent(HttpRequestEvent requestEvent) {
+    public Map<String, Object> enrichRequestEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent event) {
         // return a map with the user ip and user agent here
     }
 
     @Override
-    public Map<String, Object> extendResponseEvent(HttpRequestEvent requestEvent, HttpResponseEvent responseEvent) {
+    public Map<String, Object> enrichResponseEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent reqEvent, HttpResponseEvent resEvent) {
         // return a map with the user ip and user agent here
     }
 }
