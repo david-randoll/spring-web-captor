@@ -3,6 +3,10 @@ server:
 
 web-captor:
   enabled: true
+  additional-details:
+    user-agent: false
+    ip-address: false
+    duration: false
 
 logging:
   level:
