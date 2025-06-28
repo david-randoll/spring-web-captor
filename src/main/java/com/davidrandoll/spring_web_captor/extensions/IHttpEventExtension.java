@@ -3,6 +3,8 @@ package com.davidrandoll.spring_web_captor.extensions;
 
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Map;
 
@@ -14,7 +16,7 @@ public interface IHttpEventExtension {
      * For example, anything from spring security (username, roles, etc). Or tenantId if in a multi-tenant environment.
      * </p>
      */
-    default Map<String, Object> extendRequestEvent(HttpRequestEvent requestEvent) {
+    default Map<String, Object> enrichRequestEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent event) {
         return Map.of();
     }
 
@@ -25,7 +27,7 @@ public interface IHttpEventExtension {
      * For example, anything from spring security (username, roles, etc). Or tenantId if in a multi-tenant environment.
      * </p>
      */
-    default Map<String, Object> extendResponseEvent(HttpRequestEvent requestEvent, HttpResponseEvent responseEvent) {
+    default Map<String, Object> enrichResponseEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent reqEvent, HttpResponseEvent resEvent) {
         return Map.of();
     }
 }

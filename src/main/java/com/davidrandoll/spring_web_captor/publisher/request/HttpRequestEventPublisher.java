@@ -5,7 +5,6 @@ import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +32,7 @@ public class HttpRequestEventPublisher implements HandlerInterceptor {
 
         HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
         if (!requestEvent.getPath().equalsIgnoreCase("/error")) {
-            requestWrapper.publishEvent(httpEventExtensions, publisher);
+            requestWrapper.publishEvent(httpEventExtensions, publisher, response);
         }
 
         return true;

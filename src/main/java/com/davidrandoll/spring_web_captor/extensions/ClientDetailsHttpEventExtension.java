@@ -3,6 +3,8 @@ package com.davidrandoll.spring_web_captor.extensions;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -20,34 +22,30 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @ConditionalOnMissingBean(name = "clientDetailsHttpEventExtension", ignored = {ClientDetailsHttpEventExtension.class})
 public class ClientDetailsHttpEventExtension implements IHttpEventExtension {
-
-    public static final String USER_IP = "userIp";
-    public static final String USER_AGENT = "userAgent";
+    private static final String USER_IP = "userIp";
+    private static final String USER_AGENT = "userAgent";
+    private static final Map<String, Object> defaultResponse = Map.of(
+            USER_IP, "Unknown",
+            USER_AGENT, "Unknown"
+    );
 
     @Override
-    public Map<String, Object> extendRequestEvent(HttpRequestEvent requestEvent) {
-        return getClientDetails();
+    public Map<String, Object> enrichRequestEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent event) {
+        return getClientDetails(req);
     }
 
     @Override
-    public Map<String, Object> extendResponseEvent(HttpRequestEvent requestEvent, HttpResponseEvent responseEvent) {
-        return getClientDetails();
+    public Map<String, Object> enrichResponseEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent reqEvent, HttpResponseEvent resEvent) {
+        return getClientDetails(req);
     }
 
-    private Map<String, Object> getClientDetails() {
-        Map<String, Object> defaultResponse = Map.of(
-                USER_IP, "Unknown",
-                USER_AGENT, "Unknown"
-        );
+    private Map<String, Object> getClientDetails(HttpServletRequest request) {
         try {
-            var request = HttpServletUtils.getCurrentHttpRequest();
-            if (request == null) return defaultResponse;
-
-            var ip = HttpServletUtils.getClientIpAddressIfServletRequestExist();
+            var ipAddress = HttpServletUtils.getClientIpAddressIfServletRequestExist(request);
             var userAgent = Optional.ofNullable(request.getHeader("User-Agent"))
                     .orElse("Unknown");
             return Map.of(
-                    USER_IP, ip,
+                    USER_IP, ipAddress,
                     USER_AGENT, userAgent
             );
         } catch (Exception e) {

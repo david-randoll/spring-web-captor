@@ -48,8 +48,7 @@ public class HttpServletUtils {
     };
 
     @NonNull
-    public static String getClientIpAddressIfServletRequestExist() {
-        HttpServletRequest request = getCurrentHttpRequest();
+    public static String getClientIpAddressIfServletRequestExist(HttpServletRequest request) {
         if (request == null) return DEFAULT_IP;
         String ip = null;
         for (String header : IP_HEADER_CANDIDATES) {
@@ -65,6 +64,12 @@ public class HttpServletUtils {
         return Optional.ofNullable(ip)
                 .map(String::trim)
                 .orElse(DEFAULT_IP);
+    }
+
+    @NonNull
+    public static String getClientIpAddressIfServletRequestExist() {
+        HttpServletRequest request = getCurrentHttpRequest();
+        return getClientIpAddressIfServletRequestExist(request);
     }
 
     @Nullable

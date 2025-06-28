@@ -56,7 +56,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
-            publishRequestEventIfNotPublishedAlready(requestWrapper);
+            publishRequestEventIfNotPublishedAlready(requestWrapper, responseWrapper);
             buildAndPublishResponseEvent(responseWrapper);
         } catch (Exception ex) {
             responseWrapper.resolveException(ex, handlerExceptionResolver);
@@ -71,10 +71,11 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
      * for example, when the endpoint does not exist or when the request return a 4xx error before the filter chain is executed.
      * In this case, we need to publish the request event here.
      *
-     * @param requestWrapper the request wrapper that contains the request event
+     * @param requestWrapper  the request wrapper that contains the request event
+     * @param responseWrapper the response wrapper that contains the response event
      */
-    private void publishRequestEventIfNotPublishedAlready(CachedBodyHttpServletRequest requestWrapper) {
-        requestWrapper.publishEvent(httpEventExtensions, publisher);
+    private void publishRequestEventIfNotPublishedAlready(CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) {
+        requestWrapper.publishEvent(httpEventExtensions, publisher, responseWrapper);
     }
 
     private void buildAndPublishResponseEvent(CachedBodyHttpServletResponse responseWrapper) throws IOException {

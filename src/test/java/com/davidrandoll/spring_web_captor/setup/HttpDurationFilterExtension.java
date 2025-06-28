@@ -37,7 +37,7 @@ public class HttpDurationFilterExtension extends OncePerRequestFilter implements
     }
 
     @Override
-    public Map<String, Object> extendResponseEvent(HttpRequestEvent requestEvent, HttpResponseEvent responseEvent) {
+    public Map<String, Object> enrichResponseEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent reqEvent, HttpResponseEvent resEvent) {
         var result = new HashMap<String, Object>();
         var timeStart = timeStartLocal.get();
         Duration duration = Duration.ofMillis(System.currentTimeMillis() - timeStart);

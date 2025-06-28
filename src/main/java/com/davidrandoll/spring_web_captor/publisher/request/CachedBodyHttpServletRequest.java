@@ -1,13 +1,14 @@
 package com.davidrandoll.spring_web_captor.publisher.request;
 
 import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
+import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.davidrandoll.spring_web_captor.event.HttpMethodEnum;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
-import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -125,11 +126,11 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
         return this.httpRequestEvent;
     }
 
-    public void publishEvent(List<IHttpEventExtension> httpEventExtensions, IWebCaptorEventPublisher publisher) {
+    public void publishEvent(List<IHttpEventExtension> httpEventExtensions, IWebCaptorEventPublisher publisher, HttpServletResponse response) {
         if (this.isPublished) return;
         var requestEvent = this.toHttpRequestEvent();
         for (IHttpEventExtension extension : httpEventExtensions) {
-            var additionalData = extension.extendRequestEvent(requestEvent);
+            var additionalData = extension.enrichRequestEvent(this, response, requestEvent);
             requestEvent.addAdditionalData(additionalData);
         }
         publisher.publishEvent(requestEvent);
