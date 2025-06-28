@@ -55,6 +55,42 @@ public class MyCustomEventPublisher implements IWebCaptorEventPublisher {
 
 You can then configure your application to use this custom publisher when setting up the web captor.
 
+## Extending Event Details
+
+This library supports adding additional details to the request/response event using the `IHttpEventExtension` interface. You can implement this interface to enrich captured HTTP events with custom information.
+
+For example, the provided `ClientDetailsHttpEventExtension` implementation uses this interface to capture the user's IP address and User-Agent:
+
+```java
+public class ClientDetailsHttpEventExtension implements IHttpEventExtension {
+     @Override
+    public Map<String, Object> extendRequestEvent(HttpRequestEvent requestEvent) {
+        // return a map with the user ip and user agent here
+    }
+
+    @Override
+    public Map<String, Object> extendResponseEvent(HttpRequestEvent requestEvent, HttpResponseEvent responseEvent) {
+        // return a map with the user ip and user agent here
+    }
+}
+```
+
+To use your own extension, implement the `IHttpEventExtension` interface and register it as a Spring bean. This allows your additional details to be automatically included in the captured events.
+
+## Retrieving Additional Details from Published Events
+
+When an HTTP event is published, any additional details added by your `IHttpEventExtension` implementation will be available in the event's `additionalData` map. You can access them as follows:
+
+```java
+@EventListener
+public void handleHttpEvent(HttpEvent event) {
+    // Retrieve additional details by key from the additionalData map
+    Object clientIp = event.getAdditionalData().get("userIp");
+    Object userAgent = event.getAdditionalData().get("userAgent");
+    // Process the details as needed
+}
+```
+
 ## Captured Data
 
 - **Request:**
