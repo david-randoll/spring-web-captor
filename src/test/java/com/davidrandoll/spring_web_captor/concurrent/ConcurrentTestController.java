@@ -17,4 +17,13 @@ public class ConcurrentTestController {
                 .header("X-Message", message)
                 .body("Echo: " + message);
     }
+
+    @GetMapping("/maybe-fail")
+    public ResponseEntity<String> maybeFail(@RequestParam int index) {
+        if (index % 3 == 0) {
+            throw new RuntimeException("Intentional failure for index " + index);
+        }
+        return ResponseEntity.ok("Index " + index + " OK");
+    }
+
 }

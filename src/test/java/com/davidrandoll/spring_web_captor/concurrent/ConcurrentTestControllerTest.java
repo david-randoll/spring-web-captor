@@ -22,6 +22,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -83,5 +84,48 @@ class ConcurrentTestControllerTest {
 
         assertEquals(threadCount, uniqueBodies.size(), "Each response should be unique");
     }
+
+    @Test
+    void testConcurrentRequestsWithFailures() throws Exception {
+        int threadCount = 15;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        List<Future<Integer>> results = new ArrayList<>();
+
+        for (int i = 0; i < threadCount; i++) {
+            final int index = i;
+            results.add(executor.submit(() -> {
+                try {
+                    mockMvc.perform(get("/test/concurrent/maybe-fail")
+                                    .param("index", String.valueOf(index)))
+                            .andExpect(index % 3 == 0 ? status().is5xxServerError() : status().isOk());
+                    return index;
+                } finally {
+                    latch.countDown();
+                }
+            }));
+        }
+
+        latch.await();
+        executor.shutdown();
+
+        List<HttpRequestEvent> requestEvents = eventCaptureListener.getRequestEvents();
+        List<HttpResponseEvent> responseEvents = eventCaptureListener.getResponseEvents();
+
+        assertEquals(threadCount, requestEvents.size());
+        assertEquals(threadCount, responseEvents.size());
+
+        // Ensure error detail exists on every 3rd response
+        for (HttpResponseEvent event : responseEvents) {
+            int idx = Integer.parseInt(event.getQueryParams().get("index").get(0));
+            if (idx % 3 == 0) {
+                assertFalse(event.getErrorDetail().isEmpty(), "Expected error detail for index " + idx);
+            } else {
+                assertEquals("Index " + idx + " OK", event.getResponseBody().asText());
+            }
+        }
+    }
+
 }
 
