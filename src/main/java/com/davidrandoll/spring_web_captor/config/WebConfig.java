@@ -1,4 +1,4 @@
-package com.davidrandoll.spring_web_captor.publisher;
+package com.davidrandoll.spring_web_captor.config;
 
 import com.davidrandoll.spring_web_captor.properties.IsWebCaptorEnabled;
 import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPublisher;

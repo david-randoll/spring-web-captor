@@ -1,14 +1,14 @@
 package com.davidrandoll.spring_web_captor.properties;
 
-import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import com.davidrandoll.spring_web_captor.utils.ConditionalUtils;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.core.type.AnnotatedTypeMetadata;
+import org.springframework.lang.NonNull;
 
-public class IsWebCaptorEnabled extends AllNestedConditions {
-    public IsWebCaptorEnabled() {
-        super(ConfigurationPhase.PARSE_CONFIGURATION);
-    }
-
-    @ConditionalOnProperty(name = "web-captor.enabled", havingValue = "true", matchIfMissing = true)
-    static class IsEnabled {
+public class IsWebCaptorEnabled implements Condition {
+    @Override
+    public boolean matches(@NonNull ConditionContext context, @NonNull AnnotatedTypeMetadata metadata) {
+        return ConditionalUtils.evaluate(context, "web-captor.enabled", "true", true);
     }
 }

@@ -1,15 +1,13 @@
 package com.davidrandoll.spring_web_captor.properties;
 
-import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.ConfigurationCondition;
+import com.davidrandoll.spring_web_captor.utils.ConditionalUtils;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 
-public class IsIpAddressEnabled extends AllNestedConditions {
-    public IsIpAddressEnabled() {
-        super(ConfigurationCondition.ConfigurationPhase.PARSE_CONFIGURATION);
-    }
-
-    @ConditionalOnProperty(name = "web-captor.additional-details.ip-address", havingValue = "true", matchIfMissing = true)
-    static class IsEnabled {
+public class IsIpAddressEnabled implements Condition {
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        return ConditionalUtils.evaluate(context, "web-captor.additional-details.ip-address", "true", true);
     }
 }
