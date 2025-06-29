@@ -8,7 +8,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import java.util.Collections;
 import java.util.Map;
 
-public class PathParamsRequestCaptor implements IRequestFieldCaptor {
+public class RequestPathParamsCaptor implements IRequestFieldCaptor {
     @Override
     public void capture(HttpServletRequest request, HttpRequestEvent.HttpRequestEventBuilder<?, ?> builder) {
         Map<String, String> params = this.getPathParams(request);

@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class QueryParamsRequestCaptor implements IRequestFieldCaptor {
+public class RequestQueryParamsCaptor implements IRequestFieldCaptor {
     @Override
     public void capture(HttpServletRequest request, HttpRequestEvent.HttpRequestEventBuilder<?, ?> builder) {
         var params = this.getRequestParams(request);

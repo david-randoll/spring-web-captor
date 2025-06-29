@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class BodyRequestCaptor implements IRequestFieldCaptor {
+public class RequestBodyCaptor implements IRequestFieldCaptor {
     private final IBodyParserRegistry bodyParserRegistry;
 
     @Override

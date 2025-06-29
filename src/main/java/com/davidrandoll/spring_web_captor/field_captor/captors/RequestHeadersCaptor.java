@@ -7,7 +7,7 @@ import org.springframework.http.HttpHeaders;
 
 import java.util.Collections;
 
-public class HeadersRequestCaptor implements IRequestFieldCaptor {
+public class RequestHeadersCaptor implements IRequestFieldCaptor {
     @Override
     public void capture(HttpServletRequest request, HttpRequestEvent.HttpRequestEventBuilder<?, ?> builder) {
         HttpHeaders headers = this.getHttpHeaders(request);
