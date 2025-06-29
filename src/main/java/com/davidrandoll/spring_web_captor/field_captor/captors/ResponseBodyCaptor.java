@@ -8,6 +8,7 @@ import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 
@@ -19,9 +20,12 @@ public class ResponseBodyCaptor implements IResponseFieldCaptor {
     @Override
     public void capture(HttpServletResponse response, HttpResponseEvent.HttpResponseEventBuilder<?, ?> builder) {
         CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.castToCachedBodyHttpServletResponse(response);
+        final HttpStatus responseStatus = responseWrapper.getResponseStatus();
         try {
-            responseWrapper.getResponseBody()
-                    .thenAccept(builder::responseBody);
+            if (responseStatus.is2xxSuccessful()) {
+                responseWrapper.getResponseBody()
+                        .thenAccept(builder::responseBody);
+            }
         } catch (IOException e) {
             log.error("Error getting response body", e);
         }

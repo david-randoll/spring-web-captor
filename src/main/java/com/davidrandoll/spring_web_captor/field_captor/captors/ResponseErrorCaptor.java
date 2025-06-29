@@ -10,10 +10,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,14 +28,20 @@ public class ResponseErrorCaptor implements IResponseFieldCaptor {
     @Override
     public void capture(HttpServletResponse response, HttpResponseEvent.HttpResponseEventBuilder<?, ?> builder) {
         CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.castToCachedBodyHttpServletResponse(response);
+        final HttpStatus responseStatus = responseWrapper.getResponseStatus();
         try {
             responseWrapper.getResponseBody()
                     .exceptionally(throwable -> {
                         var ex = new RuntimeException(throwable);
                         responseWrapper.resolveException(ex, resolver);
-                        responseWrapper.publishErrorEvent(extensions, publisher, errorAttributes);
+                        Map<String, Object> errorDetails = responseWrapper.getErrorDetails(errorAttributes);
+                        builder.addErrorDetail(errorDetails);
                         return null;
                     });
+            if (!responseStatus.is2xxSuccessful()) {
+                Map<String, Object> errorDetails = responseWrapper.getErrorDetails(errorAttributes);
+                builder.addErrorDetail(errorDetails);
+            }
         } catch (IOException e) {
             log.error("Error getting response body", e);
         }

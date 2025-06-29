@@ -2,10 +2,7 @@ package com.davidrandoll.spring_web_captor.event;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import org.springframework.http.HttpHeaders;
@@ -24,6 +21,7 @@ public class HttpResponseEvent extends BaseHttpEvent {
     private JsonNode responseBody;
     private HttpStatus responseStatus;
     private HttpHeaders responseHeaders;
+    @Setter(AccessLevel.NONE)
     private Map<String, Object> errorDetail;
 
     public HttpResponseEvent(HttpRequestEvent requestEvent) {
@@ -51,5 +49,19 @@ public class HttpResponseEvent extends BaseHttpEvent {
 
     public boolean isSuccessResponse() {
         return responseStatus != null && responseStatus.is2xxSuccessful();
+    }
+
+    public abstract static class HttpResponseEventBuilder<C extends HttpResponseEvent, B extends HttpResponseEventBuilder<C, B>>
+            extends BaseHttpEvent.BaseHttpEventBuilder<C, B> {
+
+        public B addErrorDetail(Map<String, Object> errorDetail) {
+            if (errorDetail != null) {
+                this.errorDetail(errorDetail);
+                var factory = new ObjectMapper().getNodeFactory();
+                var message = errorDetail.getOrDefault("message", "").toString();
+                this.responseBody(factory.textNode(message));
+            }
+            return self();
+        }
     }
 }

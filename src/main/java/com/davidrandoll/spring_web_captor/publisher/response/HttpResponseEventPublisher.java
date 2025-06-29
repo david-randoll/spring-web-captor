@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
-import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -74,14 +73,9 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     }
 
     private void buildAndPublishResponseEvent(CachedBodyHttpServletResponse responseWrapper) throws IOException {
-        final HttpStatus responseStatus = responseWrapper.getResponseStatus();
-        if (responseStatus.is2xxSuccessful()) {
-            CompletableFuture<JsonNode> responseBody = responseWrapper.getResponseBody();
+        CompletableFuture<JsonNode> responseBody = responseWrapper.getResponseBody();
 
-            responseBody
-                    .thenRun(() -> responseWrapper.publishEvent(httpEventExtensions, publisher));
-        } else {
-            responseWrapper.publishErrorEvent(httpEventExtensions, publisher, defaultErrorAttributes);
-        }
+        responseBody
+                .thenRun(() -> responseWrapper.publishEvent(httpEventExtensions, publisher));
     }
 }
