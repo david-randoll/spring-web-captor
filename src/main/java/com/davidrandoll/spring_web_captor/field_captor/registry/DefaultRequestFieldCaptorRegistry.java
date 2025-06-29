@@ -6,6 +6,8 @@ import com.davidrandoll.spring_web_captor.properties.WebCaptorProperties;
 
 public class DefaultRequestFieldCaptorRegistry extends AbstractRequestFieldCaptorRegistry {
     public DefaultRequestFieldCaptorRegistry(IBodyParserRegistry bodyParserRegistry, WebCaptorProperties.EventDetails properties) {
+        if (properties.isIncludeEndpointExists())
+            this.register(new RequestEndpointExistsCaptor());
         if (properties.isIncludeFullUrl())
             this.register(new RequestFullUrlCaptor());
         if (properties.isIncludePath())

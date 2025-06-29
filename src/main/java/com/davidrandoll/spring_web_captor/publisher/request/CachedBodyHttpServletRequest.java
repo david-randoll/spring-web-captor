@@ -66,8 +66,8 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     public HttpRequestEvent toHttpRequestEvent() {
         if (nonNull(this.httpRequestEvent)) return this.httpRequestEvent;
 
-        this.httpRequestEvent = registry.capture(this, HttpRequestEvent.builder())
-                .endpointExists(this.endpointExists)
+        this.httpRequestEvent = registry
+                .capture(this, HttpRequestEvent.builder())
                 .build();
 
         return this.httpRequestEvent;
