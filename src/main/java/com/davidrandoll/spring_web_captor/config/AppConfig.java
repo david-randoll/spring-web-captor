@@ -15,6 +15,7 @@ import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPubl
 import com.davidrandoll.spring_web_captor.publisher.response.HttpResponseEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.response.RuntimeExceptionResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,6 +24,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.util.List;
 
@@ -45,8 +47,15 @@ public class AppConfig {
     @Bean
     @ConditionalOnMissingBean
     @Conditional(IsWebCaptorEnabled.class)
-    public IFieldCaptorRegistry requestFieldCaptorRegistry(IBodyParserRegistry bodyParserRegistry, WebCaptorProperties properties) {
-        return new DefaultFieldCaptorRegistry(bodyParserRegistry, properties.getEventDetails());
+    public IFieldCaptorRegistry fieldCaptorRegistry(
+            IBodyParserRegistry bodyParserRegistry, WebCaptorProperties properties,
+            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver, List<IHttpEventExtension> extensions,
+            IWebCaptorEventPublisher publisher, DefaultErrorAttributes errorAttributes
+    ) {
+        return new DefaultFieldCaptorRegistry(
+                bodyParserRegistry, properties.getEventDetails(),
+                resolver, extensions, publisher, errorAttributes
+        );
     }
 
     @Bean("httpDurationFilterExtension")
@@ -82,7 +91,10 @@ public class AppConfig {
             IBodyParserRegistry bodyParserRegistry,
             IFieldCaptorRegistry fieldCaptorRegistry
     ) {
-        return new HttpResponseEventPublisher(publisher, defaultErrorAttributes, httpEventExtensions, bodyParserRegistry, fieldCaptorRegistry);
+        return new HttpResponseEventPublisher(
+                publisher, defaultErrorAttributes, httpEventExtensions,
+                bodyParserRegistry, fieldCaptorRegistry
+        );
     }
 
     @Bean("httpRequestEventPublisher")
