@@ -104,6 +104,14 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
                 .responseHeaders(safe(this::getHttpHeaders, new HttpHeaders()))
                 .build();
 
+        try {
+            this.getResponseBody().thenAccept(body -> {
+                this.httpResponseEvent.setResponseBody(body);
+            });
+        } catch (IOException e) {
+            log.error("Error getting response body", e);
+        }
+
         return this.httpResponseEvent;
     }
 

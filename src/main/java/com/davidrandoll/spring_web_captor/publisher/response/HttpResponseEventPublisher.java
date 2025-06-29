@@ -79,13 +79,12 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
             CompletableFuture<JsonNode> responseBody = responseWrapper.getResponseBody();
 
             responseBody
-                    .thenAccept(body -> responseWrapper.publishEvent(body, httpEventExtensions, publisher))
                     .exceptionally(throwable -> {
                         var ex = new RuntimeException(throwable);
                         responseWrapper.resolveException(ex, handlerExceptionResolver);
                         responseWrapper.publishErrorEvent(httpEventExtensions, publisher, defaultErrorAttributes);
                         return null;
-                    });
+                    }).thenRun(() -> responseWrapper.publishEvent(httpEventExtensions, publisher));
         } else {
             responseWrapper.publishErrorEvent(httpEventExtensions, publisher, defaultErrorAttributes);
         }
