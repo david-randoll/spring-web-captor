@@ -1,6 +1,7 @@
 package com.davidrandoll.spring_web_captor.utils;
 
 import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
+import com.davidrandoll.spring_web_captor.field_captor.registry.IRequestFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.response.CachedBodyHttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,10 +21,16 @@ import java.util.Optional;
 public class HttpServletUtils {
     public static final String DEFAULT_IP = "0.0.0.0";
 
-    public CachedBodyHttpServletRequest toCachedBodyHttpServletRequest(@NonNull HttpServletRequest request, IBodyParserRegistry bodyParserRegistry) {
+    public CachedBodyHttpServletRequest castToCachedBodyHttpServletRequest(@NonNull HttpServletRequest request) {
         if (request instanceof CachedBodyHttpServletRequest cachedBodyHttpServletRequest)
             return cachedBodyHttpServletRequest;
-        return new CachedBodyHttpServletRequest(request, bodyParserRegistry);
+        throw new ClassCastException("Request is not an instance of CachedBodyHttpServletRequest");
+    }
+
+    public CachedBodyHttpServletRequest toCachedBodyHttpServletRequest(@NonNull HttpServletRequest request, IRequestFieldCaptorRegistry registry) {
+        if (request instanceof CachedBodyHttpServletRequest cachedBodyHttpServletRequest)
+            return cachedBodyHttpServletRequest;
+        return new CachedBodyHttpServletRequest(request, registry);
     }
 
     public CachedBodyHttpServletResponse toCachedBodyHttpServletResponse(@NonNull HttpServletResponse response, CachedBodyHttpServletRequest requestWrapper, IBodyParserRegistry bodyParserRegistry) {

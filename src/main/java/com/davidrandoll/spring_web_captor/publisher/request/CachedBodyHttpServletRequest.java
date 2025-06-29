@@ -1,10 +1,8 @@
 package com.davidrandoll.spring_web_captor.publisher.request;
 
-import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
-import com.davidrandoll.spring_web_captor.event.BodyPayload;
-import com.davidrandoll.spring_web_captor.event.HttpMethodEnum;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
+import com.davidrandoll.spring_web_captor.field_captor.registry.IRequestFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,27 +11,18 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.util.StreamUtils;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-import static com.davidrandoll.spring_web_captor.utils.ExceptionUtils.safe;
 import static java.util.Objects.nonNull;
 
 @Slf4j
 public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
-    private final IBodyParserRegistry bodyParserRegistry;
+    private final IRequestFieldCaptorRegistry registry;
 
     private byte[] cachedBody;
     @Getter
@@ -43,9 +32,9 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     private boolean isPublished = false;
     private HttpRequestEvent httpRequestEvent;
 
-    public CachedBodyHttpServletRequest(HttpServletRequest request, IBodyParserRegistry bodyParserRegistry) {
+    public CachedBodyHttpServletRequest(HttpServletRequest request, IRequestFieldCaptorRegistry registry) {
         super(request);
-        this.bodyParserRegistry = bodyParserRegistry;
+        this.registry = registry;
     }
 
     @Override
@@ -66,63 +55,19 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     }
 
     @SneakyThrows
-    public BodyPayload getBody() {
+    public byte[] getCachedBody() {
         if (this.cachedBody == null) {
-            getInputStream(); // Ensure the body is cached
+            getInputStream();
         }
 
-        return this.bodyParserRegistry.parse(this.getRequest(), this.cachedBody);
-    }
-
-    public MultiValueMap<String, String> getRequestParams() {
-        return this.getParameterMap()
-                .entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> entry.getValue() != null ? Arrays.asList(entry.getValue()) : Collections.emptyList(),
-                        (a, b) -> b,
-                        LinkedMultiValueMap::new
-                ));
-    }
-
-    @SuppressWarnings("unchecked")
-    public Map<String, String> getPathVariables() {
-        var pathVariables = this.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-        if (pathVariables instanceof Map<?, ?>) {
-            return (Map<String, String>) pathVariables;
-        }
-        return Collections.emptyMap();
-    }
-
-    public HttpHeaders getHttpHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        Collections.list(this.getHeaderNames()).forEach(
-                name -> headers.put(name, Collections.list(this.getHeaders(name)))
-        );
-        return headers;
-    }
-
-
-    public String getPath() {
-        return this.getRequestURI();
-    }
-
-    public String getFullUrl() {
-        return this.getRequestURL().toString();
+        return this.cachedBody;
     }
 
     public HttpRequestEvent toHttpRequestEvent() {
         if (nonNull(this.httpRequestEvent)) return this.httpRequestEvent;
 
-        this.httpRequestEvent = HttpRequestEvent.builder()
+        this.httpRequestEvent = registry.capture(this, HttpRequestEvent.builder())
                 .endpointExists(this.endpointExists)
-                .fullUrl(this.getFullUrl())
-                .path(this.getPath())
-                .method(safe(() -> HttpMethodEnum.fromValue(this.getMethod()), HttpMethodEnum.UNKNOWN))
-                .headers(safe(this::getHttpHeaders, new HttpHeaders()))
-                .queryParams(safe(this::getRequestParams, new LinkedMultiValueMap<>()))
-                .pathParams(safe(this::getPathVariables, Collections.emptyMap()))
-                .bodyPayload(safe(this::getBody, null))
                 .build();
 
         return this.httpRequestEvent;

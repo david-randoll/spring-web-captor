@@ -1,6 +1,5 @@
 package com.davidrandoll.spring_web_captor.publisher.request;
 
-import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
@@ -19,11 +18,10 @@ import java.util.List;
 public class HttpRequestEventPublisher implements HandlerInterceptor {
     private final IWebCaptorEventPublisher publisher;
     private final List<IHttpEventExtension> httpEventExtensions;
-    private final IBodyParserRegistry bodyParserRegistry;
 
     @Override
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
-        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request, bodyParserRegistry);
+        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.castToCachedBodyHttpServletRequest(request);
         requestWrapper.setEndpointExists(true);
 
         HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();

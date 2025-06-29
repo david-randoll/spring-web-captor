@@ -6,6 +6,8 @@ import com.davidrandoll.spring_web_captor.extensions.HttpDurationFilterExtension
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.extensions.IpAddressHttpEventExtension;
 import com.davidrandoll.spring_web_captor.extensions.UserAgentHttpEventExtension;
+import com.davidrandoll.spring_web_captor.field_captor.registry.DefaultRequestFieldCaptorRegistry;
+import com.davidrandoll.spring_web_captor.field_captor.registry.IRequestFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.properties.IsDurationEnabled;
 import com.davidrandoll.spring_web_captor.properties.IsIpAddressEnabled;
 import com.davidrandoll.spring_web_captor.properties.IsUserAgentEnabled;
@@ -43,6 +45,13 @@ public class AppConfig {
         return new DefaultBodyParserRegistry(objectMapper);
     }
 
+    @Bean
+    @ConditionalOnMissingBean
+    @Conditional(IsWebCaptorEnabled.class)
+    public IRequestFieldCaptorRegistry requestFieldCaptorRegistry(IBodyParserRegistry bodyParserRegistry) {
+        return new DefaultRequestFieldCaptorRegistry(bodyParserRegistry);
+    }
+
     @Bean("httpDurationFilterExtension")
     @Order(Ordered.HIGHEST_PRECEDENCE)
     @ConditionalOnMissingBean(name = "httpDurationFilterExtension", ignored = HttpDurationFilterExtension.class)
@@ -73,20 +82,17 @@ public class AppConfig {
             IWebCaptorEventPublisher publisher,
             DefaultErrorAttributes defaultErrorAttributes,
             List<IHttpEventExtension> httpEventExtensions,
-            IBodyParserRegistry bodyParserRegistry
+            IBodyParserRegistry bodyParserRegistry,
+            IRequestFieldCaptorRegistry fieldCaptorRegistry
     ) {
-        return new HttpResponseEventPublisher(publisher, defaultErrorAttributes, httpEventExtensions, bodyParserRegistry);
+        return new HttpResponseEventPublisher(publisher, defaultErrorAttributes, httpEventExtensions, bodyParserRegistry, fieldCaptorRegistry);
     }
 
     @Bean("httpRequestEventPublisher")
     @ConditionalOnMissingBean(name = "httpRequestEventPublisher", ignored = HttpRequestEventPublisher.class)
     @Conditional(IsWebCaptorEnabled.class)
-    public HttpRequestEventPublisher httpRequestEventPublisher(
-            IWebCaptorEventPublisher publisher,
-            List<IHttpEventExtension> httpEventExtensions,
-            IBodyParserRegistry bodyParserRegistry
-    ) {
-        return new HttpRequestEventPublisher(publisher, httpEventExtensions, bodyParserRegistry);
+    public HttpRequestEventPublisher httpRequestEventPublisher(IWebCaptorEventPublisher publisher, List<IHttpEventExtension> httpEventExtensions) {
+        return new HttpRequestEventPublisher(publisher, httpEventExtensions);
     }
 
     @Bean("runtimeExceptionResolver")

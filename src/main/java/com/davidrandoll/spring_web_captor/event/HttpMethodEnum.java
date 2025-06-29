@@ -2,9 +2,7 @@ package com.davidrandoll.spring_web_captor.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
-import org.springframework.web.server.ResponseStatusException;
 
 @Getter
 @AllArgsConstructor
@@ -28,6 +26,6 @@ public enum HttpMethodEnum {
                 return type;
             }
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid HTTP method: " + value);
+        return UNKNOWN;
     }
 }
