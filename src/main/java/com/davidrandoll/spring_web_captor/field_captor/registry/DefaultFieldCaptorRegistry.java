@@ -4,8 +4,8 @@ import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegist
 import com.davidrandoll.spring_web_captor.field_captor.captors.*;
 import com.davidrandoll.spring_web_captor.properties.WebCaptorProperties;
 
-public class DefaultRequestFieldCaptorRegistry extends AbstractRequestFieldCaptorRegistry {
-    public DefaultRequestFieldCaptorRegistry(IBodyParserRegistry bodyParserRegistry, WebCaptorProperties.EventDetails properties) {
+public class DefaultFieldCaptorRegistry extends AbstractFieldCaptorRegistry {
+    public DefaultFieldCaptorRegistry(IBodyParserRegistry bodyParserRegistry, WebCaptorProperties.EventDetails properties) {
         if (properties.isIncludeEndpointExists())
             this.register(new RequestEndpointExistsCaptor());
         if (properties.isIncludeFullUrl())
@@ -22,5 +22,11 @@ public class DefaultRequestFieldCaptorRegistry extends AbstractRequestFieldCapto
             this.register(new RequestPathParamsCaptor());
         if (properties.isIncludeRequestBody())
             this.register(new RequestBodyCaptor(bodyParserRegistry));
+        if (properties.isIncludeResponseStatus())
+            this.register(new ResponseStatusCaptor());
+        if (properties.isIncludeResponseHeaders())
+            this.register(new ResponseHeadersCaptor());
+        if (properties.isIncludeResponseBody())
+            this.register(new ResponseBodyCaptor(bodyParserRegistry));
     }
 }

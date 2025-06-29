@@ -5,6 +5,7 @@ import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
+import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,7 +15,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
@@ -24,25 +24,25 @@ import org.springframework.web.util.ContentCachingResponseWrapper;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static com.davidrandoll.spring_web_captor.utils.ExceptionUtils.safe;
 import static java.util.Objects.nonNull;
 
 @Slf4j
 public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper {
     private final CachedBodyHttpServletRequest request;
     private final IBodyParserRegistry bodyParserRegistry;
+    private final IFieldCaptorRegistry fieldCaptorRegistry;
 
     private boolean isPublished = false;
     private HttpResponseEvent httpResponseEvent;
     private CompletableFuture<JsonNode> responseBodyFuture;
 
-    public CachedBodyHttpServletResponse(HttpServletResponse response, CachedBodyHttpServletRequest request, IBodyParserRegistry bodyParserRegistry) {
+    public CachedBodyHttpServletResponse(HttpServletResponse response, CachedBodyHttpServletRequest request, IBodyParserRegistry bodyParserRegistry, IFieldCaptorRegistry fieldCaptorRegistry) {
         super(response);
         this.request = request;
         this.bodyParserRegistry = bodyParserRegistry;
+        this.fieldCaptorRegistry = fieldCaptorRegistry;
     }
 
     public CompletableFuture<JsonNode> getResponseBody() throws IOException {
@@ -88,29 +88,13 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         return HttpStatus.valueOf(this.getStatus());
     }
 
-    public HttpHeaders getHttpHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        Optional.of(this.getHeaderNames())
-                .ifPresent(headerNames -> headerNames.forEach(name -> headers.put(name, this.getHeaders(name).stream().toList())));
-        return headers;
-    }
-
     public HttpResponseEvent toHttpResponseEvent() {
         if (nonNull(this.httpResponseEvent)) return this.httpResponseEvent;
 
         HttpRequestEvent requestEvent = this.request.toHttpRequestEvent();
-        this.httpResponseEvent = new HttpResponseEvent(requestEvent).toBuilder()
-                .responseStatus(this.getResponseStatus())
-                .responseHeaders(safe(this::getHttpHeaders, new HttpHeaders()))
+        this.httpResponseEvent = this.fieldCaptorRegistry
+                .capture(this, new HttpResponseEvent(requestEvent).toBuilder())
                 .build();
-
-        try {
-            this.getResponseBody().thenAccept(body -> {
-                this.httpResponseEvent.setResponseBody(body);
-            });
-        } catch (IOException e) {
-            log.error("Error getting response body", e);
-        }
 
         return this.httpResponseEvent;
     }
@@ -129,12 +113,6 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         }
         publisher.publishEvent(responseEvent);
         this.isPublished = true;
-    }
-
-    public void publishEvent(JsonNode body, List<IHttpEventExtension> httpEventExtensions, IWebCaptorEventPublisher publisher) {
-        HttpResponseEvent responseEvent = this.toHttpResponseEvent();
-        responseEvent.setResponseBody(body);
-        this.publishEvent(httpEventExtensions, publisher);
     }
 
     public void resolveException(Exception ex, HandlerExceptionResolver handlerExceptionResolver) {

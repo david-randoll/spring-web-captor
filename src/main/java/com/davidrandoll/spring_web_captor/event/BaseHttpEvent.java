@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
@@ -37,6 +38,7 @@ public class BaseHttpEvent {
 
     @JsonAnySetter
     @JsonAnyGetter
+    @Builder.Default
     private Map<String, Object> additionalData = new HashMap<>();
 
     public void addAdditionalData(@NonNull Map<String, Object> additionalData) {

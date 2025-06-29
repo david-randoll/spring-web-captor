@@ -2,7 +2,7 @@ package com.davidrandoll.spring_web_captor.publisher.request;
 
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
-import com.davidrandoll.spring_web_captor.field_captor.registry.IRequestFieldCaptorRegistry;
+import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +22,7 @@ import static java.util.Objects.nonNull;
 
 @Slf4j
 public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
-    private final IRequestFieldCaptorRegistry registry;
+    private final IFieldCaptorRegistry registry;
 
     private byte[] cachedBody;
     @Getter
@@ -32,7 +32,7 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     private boolean isPublished = false;
     private HttpRequestEvent httpRequestEvent;
 
-    public CachedBodyHttpServletRequest(HttpServletRequest request, IRequestFieldCaptorRegistry registry) {
+    public CachedBodyHttpServletRequest(HttpServletRequest request, IFieldCaptorRegistry registry) {
         super(request);
         this.registry = registry;
     }

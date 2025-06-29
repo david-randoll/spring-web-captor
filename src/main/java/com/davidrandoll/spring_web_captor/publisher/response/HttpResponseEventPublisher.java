@@ -2,7 +2,7 @@ package com.davidrandoll.spring_web_captor.publisher.response;
 
 import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
-import com.davidrandoll.spring_web_captor.field_captor.registry.IRequestFieldCaptorRegistry;
+import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPublisher;
@@ -33,7 +33,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     private final DefaultErrorAttributes defaultErrorAttributes;
     private final List<IHttpEventExtension> httpEventExtensions;
     private final IBodyParserRegistry bodyParserRegistry;
-    private final IRequestFieldCaptorRegistry fieldCaptorRegistry;
+    private final IFieldCaptorRegistry fieldCaptorRegistry;
 
     @Autowired
     @Qualifier("handlerExceptionResolver")
@@ -47,7 +47,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException {
         CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request, fieldCaptorRegistry);
-        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper, bodyParserRegistry);
+        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper, bodyParserRegistry, fieldCaptorRegistry);
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);

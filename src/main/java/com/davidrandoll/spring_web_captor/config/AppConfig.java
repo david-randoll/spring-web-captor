@@ -6,8 +6,8 @@ import com.davidrandoll.spring_web_captor.extensions.HttpDurationFilterExtension
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.extensions.IpAddressHttpEventExtension;
 import com.davidrandoll.spring_web_captor.extensions.UserAgentHttpEventExtension;
-import com.davidrandoll.spring_web_captor.field_captor.registry.DefaultRequestFieldCaptorRegistry;
-import com.davidrandoll.spring_web_captor.field_captor.registry.IRequestFieldCaptorRegistry;
+import com.davidrandoll.spring_web_captor.field_captor.registry.DefaultFieldCaptorRegistry;
+import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.properties.*;
 import com.davidrandoll.spring_web_captor.publisher.DefaultWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
@@ -45,8 +45,8 @@ public class AppConfig {
     @Bean
     @ConditionalOnMissingBean
     @Conditional(IsWebCaptorEnabled.class)
-    public IRequestFieldCaptorRegistry requestFieldCaptorRegistry(IBodyParserRegistry bodyParserRegistry, WebCaptorProperties properties) {
-        return new DefaultRequestFieldCaptorRegistry(bodyParserRegistry, properties.getEventDetails());
+    public IFieldCaptorRegistry requestFieldCaptorRegistry(IBodyParserRegistry bodyParserRegistry, WebCaptorProperties properties) {
+        return new DefaultFieldCaptorRegistry(bodyParserRegistry, properties.getEventDetails());
     }
 
     @Bean("httpDurationFilterExtension")
@@ -80,7 +80,7 @@ public class AppConfig {
             DefaultErrorAttributes defaultErrorAttributes,
             List<IHttpEventExtension> httpEventExtensions,
             IBodyParserRegistry bodyParserRegistry,
-            IRequestFieldCaptorRegistry fieldCaptorRegistry
+            IFieldCaptorRegistry fieldCaptorRegistry
     ) {
         return new HttpResponseEventPublisher(publisher, defaultErrorAttributes, httpEventExtensions, bodyParserRegistry, fieldCaptorRegistry);
     }

@@ -1,7 +1,7 @@
 package com.davidrandoll.spring_web_captor.utils;
 
 import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
-import com.davidrandoll.spring_web_captor.field_captor.registry.IRequestFieldCaptorRegistry;
+import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.response.CachedBodyHttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,16 +27,22 @@ public class HttpServletUtils {
         throw new ClassCastException("Request is not an instance of CachedBodyHttpServletRequest");
     }
 
-    public CachedBodyHttpServletRequest toCachedBodyHttpServletRequest(@NonNull HttpServletRequest request, IRequestFieldCaptorRegistry registry) {
+    public CachedBodyHttpServletResponse castToCachedBodyHttpServletResponse(@NonNull HttpServletResponse response) {
+        if (response instanceof CachedBodyHttpServletResponse cachedBodyHttpServletResponse)
+            return cachedBodyHttpServletResponse;
+        throw new ClassCastException("Response is not an instance of CachedBodyHttpServletResponse");
+    }
+
+    public CachedBodyHttpServletRequest toCachedBodyHttpServletRequest(@NonNull HttpServletRequest request, IFieldCaptorRegistry registry) {
         if (request instanceof CachedBodyHttpServletRequest cachedBodyHttpServletRequest)
             return cachedBodyHttpServletRequest;
         return new CachedBodyHttpServletRequest(request, registry);
     }
 
-    public CachedBodyHttpServletResponse toCachedBodyHttpServletResponse(@NonNull HttpServletResponse response, CachedBodyHttpServletRequest requestWrapper, IBodyParserRegistry bodyParserRegistry) {
+    public CachedBodyHttpServletResponse toCachedBodyHttpServletResponse(@NonNull HttpServletResponse response, CachedBodyHttpServletRequest requestWrapper, IBodyParserRegistry bodyParserRegistry, IFieldCaptorRegistry fieldCaptorRegistry) {
         if (response instanceof CachedBodyHttpServletResponse cachedBodyHttpServletResponse)
             return cachedBodyHttpServletResponse;
-        return new CachedBodyHttpServletResponse(response, requestWrapper, bodyParserRegistry);
+        return new CachedBodyHttpServletResponse(response, requestWrapper, bodyParserRegistry, fieldCaptorRegistry);
     }
 
     private static final String[] IP_HEADER_CANDIDATES = {
