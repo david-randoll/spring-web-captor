@@ -23,7 +23,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CompletableFuture;
 
 
 @Slf4j
@@ -76,17 +76,16 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     private void buildAndPublishResponseEvent(CachedBodyHttpServletResponse responseWrapper) throws IOException {
         final HttpStatus responseStatus = responseWrapper.getResponseStatus();
         if (responseStatus.is2xxSuccessful()) {
-            CompletionStage<JsonNode> responseBody = responseWrapper.getResponseBody();
+            CompletableFuture<JsonNode> responseBody = responseWrapper.getResponseBody();
 
-            responseBody.whenComplete((body, throwable) -> {
-                if (throwable != null) {
-                    var ex = new RuntimeException(throwable);
-                    responseWrapper.resolveException(ex, handlerExceptionResolver);
-                    responseWrapper.publishErrorEvent(httpEventExtensions, publisher, defaultErrorAttributes);
-                } else {
-                    responseWrapper.publishEvent(body, httpEventExtensions, publisher);
-                }
-            });
+            responseBody
+                    .thenAccept(body -> responseWrapper.publishEvent(body, httpEventExtensions, publisher))
+                    .exceptionally(throwable -> {
+                        var ex = new RuntimeException(throwable);
+                        responseWrapper.resolveException(ex, handlerExceptionResolver);
+                        responseWrapper.publishErrorEvent(httpEventExtensions, publisher, defaultErrorAttributes);
+                        return null;
+                    });
         } else {
             responseWrapper.publishErrorEvent(httpEventExtensions, publisher, defaultErrorAttributes);
         }

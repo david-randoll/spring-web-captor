@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 import static com.davidrandoll.spring_web_captor.utils.ExceptionUtils.safe;
 import static java.util.Objects.nonNull;
@@ -38,6 +37,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
 
     private boolean isPublished = false;
     private HttpResponseEvent httpResponseEvent;
+    private CompletableFuture<JsonNode> responseBodyFuture;
 
     public CachedBodyHttpServletResponse(HttpServletResponse response, CachedBodyHttpServletRequest request, IBodyParserRegistry bodyParserRegistry) {
         super(response);
@@ -45,20 +45,15 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         this.bodyParserRegistry = bodyParserRegistry;
     }
 
-    public HttpHeaders getHttpHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        Optional.of(this.getHeaderNames())
-                .ifPresent(headerNames -> headerNames.forEach(name -> headers.put(name, this.getHeaders(name).stream().toList())));
-        return headers;
-    }
+    public CompletableFuture<JsonNode> getResponseBody() throws IOException {
+        if (this.responseBodyFuture != null) return this.responseBodyFuture;
 
-    public CompletionStage<JsonNode> getResponseBody() throws IOException {
-        var future = new CompletableFuture<JsonNode>();
+        this.responseBodyFuture = new CompletableFuture<>();
 
         if (request.isAsyncStarted()) {
             request.getAsyncContext().addListener(new AsyncListener() {
                 public void onComplete(AsyncEvent asyncEvent) throws IOException {
-                    getBody(future);
+                    getBody(responseBodyFuture);
                 }
 
                 public void onTimeout(AsyncEvent asyncEvent) {
@@ -75,9 +70,9 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
                 }
             });
         } else {
-            getBody(future);
+            getBody(responseBodyFuture);
         }
-        return future;
+        return responseBodyFuture;
     }
 
     private void getBody(CompletableFuture<JsonNode> future) throws IOException {
@@ -91,6 +86,13 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
 
     public HttpStatus getResponseStatus() {
         return HttpStatus.valueOf(this.getStatus());
+    }
+
+    public HttpHeaders getHttpHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        Optional.of(this.getHeaderNames())
+                .ifPresent(headerNames -> headerNames.forEach(name -> headers.put(name, this.getHeaders(name).stream().toList())));
+        return headers;
     }
 
     public HttpResponseEvent toHttpResponseEvent() {
