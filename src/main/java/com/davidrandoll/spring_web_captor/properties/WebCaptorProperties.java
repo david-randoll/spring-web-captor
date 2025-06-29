@@ -26,6 +26,7 @@ public class WebCaptorProperties {
 
     @Data
     public static class EventDetails {
+        private boolean includeEndpointExists = true;
         private boolean includeFullUrl = true;
         private boolean includePath = true;
         private boolean includeMethod = true;
@@ -38,6 +39,5 @@ public class WebCaptorProperties {
         private boolean includeResponseBody = true;
         private boolean includeResponseStatus = true;
         private boolean includeErrorDetails = true;
-        private boolean includeEndpointExists = true;
     }
 }

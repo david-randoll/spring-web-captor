@@ -8,10 +8,7 @@ import com.davidrandoll.spring_web_captor.extensions.IpAddressHttpEventExtension
 import com.davidrandoll.spring_web_captor.extensions.UserAgentHttpEventExtension;
 import com.davidrandoll.spring_web_captor.field_captor.registry.DefaultRequestFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.field_captor.registry.IRequestFieldCaptorRegistry;
-import com.davidrandoll.spring_web_captor.properties.IsDurationEnabled;
-import com.davidrandoll.spring_web_captor.properties.IsIpAddressEnabled;
-import com.davidrandoll.spring_web_captor.properties.IsUserAgentEnabled;
-import com.davidrandoll.spring_web_captor.properties.IsWebCaptorEnabled;
+import com.davidrandoll.spring_web_captor.properties.*;
 import com.davidrandoll.spring_web_captor.publisher.DefaultWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPublisher;
@@ -41,15 +38,15 @@ public class AppConfig {
     @Bean
     @ConditionalOnMissingBean
     @Conditional(IsWebCaptorEnabled.class)
-    public IBodyParserRegistry bodyParserRegistry(ObjectMapper objectMapper) {
-        return new DefaultBodyParserRegistry(objectMapper);
+    public IBodyParserRegistry bodyParserRegistry(ObjectMapper objectMapper, WebCaptorProperties properties) {
+        return new DefaultBodyParserRegistry(objectMapper, properties.getEventDetails());
     }
 
     @Bean
     @ConditionalOnMissingBean
     @Conditional(IsWebCaptorEnabled.class)
-    public IRequestFieldCaptorRegistry requestFieldCaptorRegistry(IBodyParserRegistry bodyParserRegistry) {
-        return new DefaultRequestFieldCaptorRegistry(bodyParserRegistry);
+    public IRequestFieldCaptorRegistry requestFieldCaptorRegistry(IBodyParserRegistry bodyParserRegistry, WebCaptorProperties properties) {
+        return new DefaultRequestFieldCaptorRegistry(bodyParserRegistry, properties.getEventDetails());
     }
 
     @Bean("httpDurationFilterExtension")

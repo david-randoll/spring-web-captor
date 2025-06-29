@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -15,7 +16,10 @@ import org.springframework.web.multipart.support.StandardMultipartHttpServletReq
 import java.io.IOException;
 
 @Order(1)
+@RequiredArgsConstructor
 public class MultipartBodyParser implements IBodyParser {
+    private final boolean includeFiles;
+
     @Override
     public boolean supports(String contentType) {
         return contentType != null && contentType.contains("multipart");
@@ -37,6 +41,8 @@ public class MultipartBodyParser implements IBodyParser {
                 objectNode.set(key, arrayNode);
             }
         });
+
+        if (!includeFiles) return new BodyPayload(objectNode);
 
         return new BodyPayload(objectNode, multipartRequest.getMultiFileMap());
     }
