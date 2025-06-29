@@ -115,18 +115,22 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         this.isPublished = true;
     }
 
-    public void resolveException(Exception ex, HandlerExceptionResolver handlerExceptionResolver) {
+    public void resolveException(Exception ex, HandlerExceptionResolver resolver) {
         this.resetBuffer();
         this.setContentType("application/json;charset=UTF-8");
-        handlerExceptionResolver.resolveException(this.request, this, null, ex);
+        resolver.resolveException(this.request, this, null, ex);
     }
 
     public void publishErrorEvent(List<IHttpEventExtension> httpEventExtensions, IWebCaptorEventPublisher publisher, DefaultErrorAttributes defaultErrorAttributes) {
         HttpResponseEvent responseEvent = this.toHttpResponseEvent();
-        WebRequest webRequest = new ServletWebRequest(this.request);
-        ErrorAttributeOptions options = ErrorAttributeOptions.of(ErrorAttributeOptions.Include.values());
-        Map<String, Object> errorAttributes = defaultErrorAttributes.getErrorAttributes(webRequest, options);
+        Map<String, Object> errorAttributes = this.getErrorDetails(defaultErrorAttributes);
         responseEvent.addErrorDetail(errorAttributes);
         this.publishEvent(httpEventExtensions, publisher);
+    }
+
+    public Map<String, Object> getErrorDetails(DefaultErrorAttributes defaultErrorAttributes) {
+        WebRequest webRequest = new ServletWebRequest(this.request);
+        ErrorAttributeOptions options = ErrorAttributeOptions.of(ErrorAttributeOptions.Include.values());
+        return defaultErrorAttributes.getErrorAttributes(webRequest, options);
     }
 }
