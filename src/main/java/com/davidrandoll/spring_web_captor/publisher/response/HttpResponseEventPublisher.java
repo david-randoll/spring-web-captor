@@ -7,8 +7,8 @@ import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPublisher;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,6 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 
 @Slf4j
@@ -44,17 +43,19 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
      * This is why in the {@link  HttpRequestEventPublisher#preHandle}, the event is published in the preHandle method.
      */
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException, ServletException {
         CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request, fieldCaptorRegistry);
         CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper, bodyParserRegistry, fieldCaptorRegistry);
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
             publishRequestEventIfNotPublishedAlready(requestWrapper, responseWrapper);
-            buildAndPublishResponseEvent(responseWrapper);
+            responseWrapper.getResponseBody()
+                    .thenRun(() -> responseWrapper.publishEvent(httpEventExtensions, publisher));
         } catch (Exception ex) {
-            responseWrapper.resolveException(ex, handlerExceptionResolver);
-            responseWrapper.publishErrorEvent(httpEventExtensions, publisher, defaultErrorAttributes);
+            responseWrapper.getResponseBody()
+                    .completeExceptionally(ex);
+            throw ex;
         } finally {
             responseWrapper.copyBodyToResponse(); // IMPORTANT: copy response back into original response
         }
@@ -70,12 +71,5 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
      */
     private void publishRequestEventIfNotPublishedAlready(CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) {
         requestWrapper.publishEvent(httpEventExtensions, publisher, responseWrapper);
-    }
-
-    private void buildAndPublishResponseEvent(CachedBodyHttpServletResponse responseWrapper) throws IOException {
-        CompletableFuture<JsonNode> responseBody = responseWrapper.getResponseBody();
-
-        responseBody
-                .thenRun(() -> responseWrapper.publishEvent(httpEventExtensions, publisher));
     }
 }

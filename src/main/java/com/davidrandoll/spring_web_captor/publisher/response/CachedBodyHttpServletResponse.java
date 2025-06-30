@@ -12,24 +12,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.web.error.ErrorAttributeOptions;
-import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.context.request.ServletWebRequest;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.Objects.nonNull;
 
 @Slf4j
 public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper {
+    @Getter
     private final CachedBodyHttpServletRequest request;
     private final IBodyParserRegistry bodyParserRegistry;
     private final IFieldCaptorRegistry fieldCaptorRegistry;
@@ -61,8 +58,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
                 }
 
                 public void onError(AsyncEvent asyncEvent) {
-                    //ignore
-                    log.error("Error occurred while processing async request", asyncEvent.getThrowable());
+                    responseBodyFuture.completeExceptionally(asyncEvent.getThrowable());
                 }
 
                 public void onStartAsync(AsyncEvent asyncEvent) {
@@ -119,18 +115,5 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         this.resetBuffer();
         this.setContentType("application/json;charset=UTF-8");
         resolver.resolveException(this.request, this, null, ex);
-    }
-
-    public void publishErrorEvent(List<IHttpEventExtension> httpEventExtensions, IWebCaptorEventPublisher publisher, DefaultErrorAttributes defaultErrorAttributes) {
-        HttpResponseEvent responseEvent = this.toHttpResponseEvent();
-        Map<String, Object> errorAttributes = this.getErrorDetails(defaultErrorAttributes);
-        responseEvent.addErrorDetail(errorAttributes);
-        this.publishEvent(httpEventExtensions, publisher);
-    }
-
-    public Map<String, Object> getErrorDetails(DefaultErrorAttributes defaultErrorAttributes) {
-        WebRequest webRequest = new ServletWebRequest(this.request);
-        ErrorAttributeOptions options = ErrorAttributeOptions.of(ErrorAttributeOptions.Include.values());
-        return defaultErrorAttributes.getErrorAttributes(webRequest, options);
     }
 }

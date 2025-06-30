@@ -9,8 +9,11 @@ import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
@@ -34,16 +37,22 @@ public class ResponseErrorCaptor implements IResponseFieldCaptor {
                     .exceptionally(throwable -> {
                         var ex = new RuntimeException(throwable);
                         responseWrapper.resolveException(ex, resolver);
-                        Map<String, Object> errorDetails = responseWrapper.getErrorDetails(errorAttributes);
+                        Map<String, Object> errorDetails = getErrorDetails(responseWrapper);
                         builder.addErrorDetail(errorDetails);
                         return null;
                     });
             if (!responseStatus.is2xxSuccessful()) {
-                Map<String, Object> errorDetails = responseWrapper.getErrorDetails(errorAttributes);
+                Map<String, Object> errorDetails = getErrorDetails(responseWrapper);
                 builder.addErrorDetail(errorDetails);
             }
         } catch (IOException e) {
             log.error("Error getting response body", e);
         }
+    }
+
+    public Map<String, Object> getErrorDetails(CachedBodyHttpServletResponse responseWrapper) {
+        WebRequest webRequest = new ServletWebRequest(responseWrapper.getRequest());
+        ErrorAttributeOptions options = ErrorAttributeOptions.of(ErrorAttributeOptions.Include.values());
+        return errorAttributes.getErrorAttributes(webRequest, options);
     }
 }
