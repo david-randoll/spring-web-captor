@@ -4,9 +4,8 @@ import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegist
 import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
-import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
-import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
+import com.davidrandoll.spring_web_captor.publisher.IHttpEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.AsyncEvent;
@@ -19,7 +18,6 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.Objects.nonNull;
@@ -95,19 +93,11 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         return this.httpResponseEvent;
     }
 
-    public void publishEvent(List<IHttpEventExtension> httpEventExtensions, IWebCaptorEventPublisher publisher) {
+    public void publishEvent(IHttpEventPublisher publisher) {
         if (this.isPublished) return;
         HttpRequestEvent requestEvent = this.request.toHttpRequestEvent();
         HttpResponseEvent responseEvent = this.toHttpResponseEvent();
-        for (IHttpEventExtension extension : httpEventExtensions) {
-            try {
-                var additionalData = extension.enrichResponseEvent(this.request, this, requestEvent, responseEvent);
-                responseEvent.addAdditionalData(additionalData);
-            } catch (Exception e) {
-                log.error("Error enriching response event with extension: {}", extension.getClass().getName(), e);
-            }
-        }
-        publisher.publishEvent(responseEvent);
+        publisher.publishResponseEvent(requestEvent, responseEvent, this.request, this);
         this.isPublished = true;
     }
 

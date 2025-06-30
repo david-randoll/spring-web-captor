@@ -1,9 +1,8 @@
 package com.davidrandoll.spring_web_captor.publisher.response;
 
 import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
-import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
-import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
+import com.davidrandoll.spring_web_captor.publisher.IHttpEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPublisher;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
@@ -15,21 +14,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.lang.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
-import java.util.List;
 
 
 @Slf4j
 @RequiredArgsConstructor
 public class HttpResponseEventPublisher extends OncePerRequestFilter {
-    private final IWebCaptorEventPublisher publisher;
-    private final DefaultErrorAttributes defaultErrorAttributes;
-    private final List<IHttpEventExtension> httpEventExtensions;
+    private final IHttpEventPublisher publisher;
     private final IBodyParserRegistry bodyParserRegistry;
     private final IFieldCaptorRegistry fieldCaptorRegistry;
 
@@ -51,7 +46,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
             filterChain.doFilter(requestWrapper, responseWrapper);
             publishRequestEventIfNotPublishedAlready(requestWrapper, responseWrapper);
             responseWrapper.getResponseBody()
-                    .thenRun(() -> responseWrapper.publishEvent(httpEventExtensions, publisher));
+                    .thenRun(() -> responseWrapper.publishEvent(publisher));
         } catch (Exception ex) {
             responseWrapper.getResponseBody()
                     .completeExceptionally(ex);
@@ -70,6 +65,6 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
      * @param responseWrapper the response wrapper that contains the response event
      */
     private void publishRequestEventIfNotPublishedAlready(CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) {
-        requestWrapper.publishEvent(httpEventExtensions, publisher, responseWrapper);
+        requestWrapper.publishEvent(publisher, responseWrapper);
     }
 }

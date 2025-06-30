@@ -1,9 +1,8 @@
 package com.davidrandoll.spring_web_captor.publisher.request;
 
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
-import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
-import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
+import com.davidrandoll.spring_web_captor.publisher.IHttpEventPublisher;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,7 +15,6 @@ import org.springframework.util.StreamUtils;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import java.io.IOException;
-import java.util.List;
 
 import static java.util.Objects.nonNull;
 
@@ -73,18 +71,10 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
         return this.httpRequestEvent;
     }
 
-    public void publishEvent(List<IHttpEventExtension> httpEventExtensions, IWebCaptorEventPublisher publisher, HttpServletResponse response) {
+    public void publishEvent(IHttpEventPublisher publisher, HttpServletResponse response) {
         if (this.isPublished) return;
-        var requestEvent = this.toHttpRequestEvent();
-        for (IHttpEventExtension extension : httpEventExtensions) {
-            try {
-                var additionalData = extension.enrichRequestEvent(this, response, requestEvent);
-                requestEvent.addAdditionalData(additionalData);
-            } catch (Exception e) {
-                log.error("Error enriching request event with extension: {}", extension.getClass().getName(), e);
-            }
-        }
-        publisher.publishEvent(requestEvent);
+        HttpRequestEvent requestEvent = this.toHttpRequestEvent();
+        publisher.publishRequestEvent(requestEvent, this, response);
         this.isPublished = true;
     }
 }
