@@ -2,10 +2,8 @@ package com.davidrandoll.spring_web_captor.publisher.request;
 
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
-import com.davidrandoll.spring_web_captor.publisher.IHttpEventPublisher;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -27,6 +25,7 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     @Setter
     private boolean endpointExists;
 
+    @Getter
     private boolean isPublished = false;
     private HttpRequestEvent httpRequestEvent;
 
@@ -71,10 +70,7 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
         return this.httpRequestEvent;
     }
 
-    public void publishEvent(IHttpEventPublisher publisher, HttpServletResponse response) {
-        if (this.isPublished) return;
-        HttpRequestEvent requestEvent = this.toHttpRequestEvent();
-        publisher.publishRequestEvent(requestEvent, this, response);
+    public void markAsPublished() {
         this.isPublished = true;
     }
 }

@@ -5,7 +5,6 @@ import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
 import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
-import com.davidrandoll.spring_web_captor.publisher.IHttpEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.AsyncEvent;
@@ -29,6 +28,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
     private final IBodyParserRegistry bodyParserRegistry;
     private final IFieldCaptorRegistry fieldCaptorRegistry;
 
+    @Getter
     private boolean isPublished = false;
     private HttpResponseEvent httpResponseEvent;
     private CompletableFuture<JsonNode> responseBodyFuture;
@@ -93,17 +93,13 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         return this.httpResponseEvent;
     }
 
-    public void publishEvent(IHttpEventPublisher publisher) {
-        if (this.isPublished) return;
-        HttpRequestEvent requestEvent = this.request.toHttpRequestEvent();
-        HttpResponseEvent responseEvent = this.toHttpResponseEvent();
-        publisher.publishResponseEvent(requestEvent, responseEvent, this.request, this);
-        this.isPublished = true;
-    }
-
     public void resolveException(Exception ex, HandlerExceptionResolver resolver) {
         this.resetBuffer();
         this.setContentType("application/json;charset=UTF-8");
         resolver.resolveException(this.request, this, null, ex);
+    }
+
+    public void markAsPublished() {
+        this.isPublished = true;
     }
 }

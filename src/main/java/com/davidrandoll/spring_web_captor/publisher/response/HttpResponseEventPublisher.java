@@ -12,11 +12,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.lang.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
@@ -28,10 +25,6 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     private final IBodyParserRegistry bodyParserRegistry;
     private final IFieldCaptorRegistry fieldCaptorRegistry;
 
-    @Autowired
-    @Qualifier("handlerExceptionResolver")
-    private HandlerExceptionResolver handlerExceptionResolver;
-
     /**
      * NOTE: Cannot publish the request event here because the path params are not available here yet.
      * After the filter chain is executed, the path params are available in the requestWrapper object.
@@ -39,14 +32,18 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
      */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException, ServletException {
-        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request, fieldCaptorRegistry);
-        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper, bodyParserRegistry, fieldCaptorRegistry);
+        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(
+                request, fieldCaptorRegistry
+        );
+        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(
+                response, requestWrapper, bodyParserRegistry, fieldCaptorRegistry
+        );
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
             publishRequestEventIfNotPublishedAlready(requestWrapper, responseWrapper);
             responseWrapper.getResponseBody()
-                    .thenRun(() -> responseWrapper.publishEvent(publisher));
+                    .thenRun(() -> publisher.publishResponseEvent(requestWrapper, responseWrapper));
         } catch (Exception ex) {
             responseWrapper.getResponseBody()
                     .completeExceptionally(ex);
@@ -61,10 +58,10 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
      * for example, when the endpoint does not exist or when the request return a 4xx error before the filter chain is executed.
      * In this case, we need to publish the request event here.
      *
-     * @param requestWrapper  the request wrapper that contains the request event
-     * @param responseWrapper the response wrapper that contains the response event
+     * @param request  the request wrapper that contains the request event
+     * @param response the response wrapper that contains the response event
      */
-    private void publishRequestEventIfNotPublishedAlready(CachedBodyHttpServletRequest requestWrapper, CachedBodyHttpServletResponse responseWrapper) {
-        requestWrapper.publishEvent(publisher, responseWrapper);
+    private void publishRequestEventIfNotPublishedAlready(CachedBodyHttpServletRequest request, CachedBodyHttpServletResponse response) {
+        publisher.publishRequestEvent(request, response);
     }
 }

@@ -39,6 +39,6 @@ public class DefaultFieldCaptorRegistry extends AbstractFieldCaptorRegistry {
         if (properties.isIncludeResponseBody())
             this.register(new ResponseBodyCaptor(bodyParserRegistry));
         if (properties.isIncludeErrorDetails())
-            this.register(new ResponseErrorCaptor(resolver, extensions, publisher, errorAttributes));
+            this.register(new ResponseErrorCaptor(resolver, errorAttributes));
     }
 }

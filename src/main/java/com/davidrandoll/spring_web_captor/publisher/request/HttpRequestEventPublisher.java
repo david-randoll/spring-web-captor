@@ -22,7 +22,7 @@ public class HttpRequestEventPublisher implements HandlerInterceptor {
 
         HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
         if (!requestEvent.getPath().equalsIgnoreCase("/error")) {
-            requestWrapper.publishEvent(publisher, response);
+            publisher.publishRequestEvent(requestWrapper, response);
         }
 
         return true;

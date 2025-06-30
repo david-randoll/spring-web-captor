@@ -109,8 +109,12 @@ public class AppConfig {
     @Bean("httpRequestEventPublisher")
     @ConditionalOnMissingBean(name = "httpRequestEventPublisher", ignored = HttpRequestEventPublisher.class)
     @Conditional(IsWebCaptorEnabled.class)
-    public HttpRequestEventPublisher httpRequestEventPublisher(IHttpEventPublisher publisher) {
-        return new HttpRequestEventPublisher(publisher);
+    public HttpRequestEventPublisher httpRequestEventPublisher(
+            IHttpEventPublisher publisher
+    ) {
+        return new HttpRequestEventPublisher(
+                publisher
+        );
     }
 
     @Bean("runtimeExceptionResolver")
