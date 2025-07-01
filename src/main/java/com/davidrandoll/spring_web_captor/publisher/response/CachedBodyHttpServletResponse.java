@@ -1,6 +1,5 @@
 package com.davidrandoll.spring_web_captor.publisher.response;
 
-import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
 import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
@@ -29,7 +28,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
     private HttpResponseEvent httpResponseEvent;
     private CompletableFuture<byte[]> responseBodyFuture;
 
-    public CachedBodyHttpServletResponse(HttpServletResponse response, CachedBodyHttpServletRequest request, IBodyParserRegistry bodyParserRegistry) {
+    public CachedBodyHttpServletResponse(HttpServletResponse response, CachedBodyHttpServletRequest request) {
         super(response);
         this.request = request;
     }
