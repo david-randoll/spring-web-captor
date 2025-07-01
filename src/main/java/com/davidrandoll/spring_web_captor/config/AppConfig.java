@@ -100,11 +100,10 @@ public class AppConfig {
     @Conditional(IsWebCaptorEnabled.class)
     public HttpResponseEventPublisher httpResponseEventPublisher(
             IHttpEventPublisher publisher,
-            IBodyParserRegistry bodyParserRegistry,
-            IFieldCaptorRegistry fieldCaptorRegistry
+            IBodyParserRegistry bodyParserRegistry
     ) {
         return new HttpResponseEventPublisher(
-                publisher, bodyParserRegistry, fieldCaptorRegistry
+                publisher, bodyParserRegistry
         );
     }
 

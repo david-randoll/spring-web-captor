@@ -1,7 +1,6 @@
 package com.davidrandoll.spring_web_captor.utils;
 
 import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
-import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.response.CachedBodyHttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,10 +32,10 @@ public class HttpServletUtils {
         return new CachedBodyHttpServletRequest(request);
     }
 
-    public CachedBodyHttpServletResponse toCachedBodyHttpServletResponse(@NonNull HttpServletResponse response, CachedBodyHttpServletRequest requestWrapper, IBodyParserRegistry bodyParserRegistry, IFieldCaptorRegistry fieldCaptorRegistry) {
+    public CachedBodyHttpServletResponse toCachedBodyHttpServletResponse(@NonNull HttpServletResponse response, CachedBodyHttpServletRequest requestWrapper, IBodyParserRegistry bodyParserRegistry) {
         if (response instanceof CachedBodyHttpServletResponse cachedBodyHttpServletResponse)
             return cachedBodyHttpServletResponse;
-        return new CachedBodyHttpServletResponse(response, requestWrapper, bodyParserRegistry, fieldCaptorRegistry);
+        return new CachedBodyHttpServletResponse(response, requestWrapper, bodyParserRegistry);
     }
 
     private static final String[] IP_HEADER_CANDIDATES = {

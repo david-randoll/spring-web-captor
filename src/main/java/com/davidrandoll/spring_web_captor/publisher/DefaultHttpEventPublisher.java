@@ -47,7 +47,7 @@ public class DefaultHttpEventPublisher implements IHttpEventPublisher {
         if (responseWrapper.isPublished()) return;
 
         HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent(registry);
-        HttpResponseEvent responseEvent = responseWrapper.toHttpResponseEvent();
+        HttpResponseEvent responseEvent = responseWrapper.toHttpResponseEvent(registry);
 
         for (IHttpEventExtension extension : httpEventExtensions) {
             try {

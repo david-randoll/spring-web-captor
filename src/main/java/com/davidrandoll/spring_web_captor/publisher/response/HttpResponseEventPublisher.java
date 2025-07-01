@@ -1,7 +1,6 @@
 package com.davidrandoll.spring_web_captor.publisher.response;
 
 import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
-import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.publisher.IHttpEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPublisher;
@@ -23,7 +22,6 @@ import java.io.IOException;
 public class HttpResponseEventPublisher extends OncePerRequestFilter {
     private final IHttpEventPublisher publisher;
     private final IBodyParserRegistry bodyParserRegistry;
-    private final IFieldCaptorRegistry fieldCaptorRegistry;
 
     /**
      * NOTE: Cannot publish the request event here because the path params are not available here yet.
@@ -34,7 +32,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException, ServletException {
         CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request);
         CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(
-                response, requestWrapper, bodyParserRegistry, fieldCaptorRegistry
+                response, requestWrapper, bodyParserRegistry
         );
 
         try {

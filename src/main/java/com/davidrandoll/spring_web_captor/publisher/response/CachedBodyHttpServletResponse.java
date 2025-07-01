@@ -26,18 +26,16 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
     @Getter
     private final CachedBodyHttpServletRequest request;
     private final IBodyParserRegistry bodyParserRegistry;
-    private final IFieldCaptorRegistry fieldCaptorRegistry;
 
     @Getter
     private boolean isPublished = false;
     private HttpResponseEvent httpResponseEvent;
     private CompletableFuture<JsonNode> responseBodyFuture;
 
-    public CachedBodyHttpServletResponse(HttpServletResponse response, CachedBodyHttpServletRequest request, IBodyParserRegistry bodyParserRegistry, IFieldCaptorRegistry fieldCaptorRegistry) {
+    public CachedBodyHttpServletResponse(HttpServletResponse response, CachedBodyHttpServletRequest request, IBodyParserRegistry bodyParserRegistry) {
         super(response);
         this.request = request;
         this.bodyParserRegistry = bodyParserRegistry;
-        this.fieldCaptorRegistry = fieldCaptorRegistry;
     }
 
     public CompletableFuture<JsonNode> getResponseBody() throws IOException {
@@ -82,11 +80,11 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         return HttpStatus.valueOf(this.getStatus());
     }
 
-    public HttpResponseEvent toHttpResponseEvent() {
+    public HttpResponseEvent toHttpResponseEvent(IFieldCaptorRegistry fieldCaptorRegistry) {
         if (nonNull(this.httpResponseEvent)) return this.httpResponseEvent;
 
         HttpRequestEvent requestEvent = this.request.toHttpRequestEvent(fieldCaptorRegistry);
-        this.httpResponseEvent = this.fieldCaptorRegistry
+        this.httpResponseEvent = fieldCaptorRegistry
                 .capture(this, new HttpResponseEvent(requestEvent).toBuilder())
                 .build();
 
