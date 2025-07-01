@@ -25,11 +25,12 @@ public class DefaultHttpEventPublisher implements IHttpEventPublisher {
     @Override
     public void publishRequestEvent(HttpServletRequest request, HttpServletResponse response) {
         CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request);
+        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper);
         if (requestWrapper.isPublished()) return;
         HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent(registry);
         for (IHttpEventExtension extension : httpEventExtensions) {
             try {
-                Map<String, Object> additionalData = extension.enrichRequestEvent(request, response, requestEvent);
+                Map<String, Object> additionalData = extension.enrichRequestEvent(requestWrapper, responseWrapper, requestEvent);
                 requestEvent.addAdditionalData(additionalData);
             } catch (Exception e) {
                 log.error("Error enriching request event with extension: {}", extension.getClass().getName(), e);
