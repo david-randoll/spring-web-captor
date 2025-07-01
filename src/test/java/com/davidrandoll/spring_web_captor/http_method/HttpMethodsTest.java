@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -206,5 +207,13 @@ class HttpMethodsTest {
         assertThat(requestEvent.getHeaders().get("X-Test")).containsExactly("one", "two");
     }
 
+    @Test
+    void testUnknownEndpointStillPublishesEvents() throws Exception {
+        mockMvc.perform(get("/not-mapped"))
+                .andExpect(status().isNotFound());
+
+        assertEquals(1, eventCaptureListener.getRequestEvents().size());
+        assertEquals(1, eventCaptureListener.getResponseEvents().size());
+    }
 
 }

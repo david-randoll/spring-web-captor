@@ -45,10 +45,14 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
                 }
 
                 public void onTimeout(AsyncEvent asyncEvent) {
-                    //ignore
+                    log.error("Async request timed out: {}", asyncEvent.getThrowable().getMessage(), asyncEvent.getThrowable());
+                    responseBodyFuture.completeExceptionally(
+                            new IOException("Async request timed out: " + asyncEvent.getThrowable().getMessage())
+                    );
                 }
 
                 public void onError(AsyncEvent asyncEvent) {
+                    log.error("Error in async request: {}", asyncEvent.getThrowable().getMessage(), asyncEvent.getThrowable());
                     responseBodyFuture.completeExceptionally(asyncEvent.getThrowable());
                 }
 
