@@ -1,20 +1,15 @@
 package com.davidrandoll.spring_web_captor.field_captor.registry;
 
 import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
-import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
 import com.davidrandoll.spring_web_captor.field_captor.captors.*;
 import com.davidrandoll.spring_web_captor.properties.WebCaptorProperties;
-import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.web.servlet.HandlerExceptionResolver;
-
-import java.util.List;
 
 public class DefaultFieldCaptorRegistry extends AbstractFieldCaptorRegistry {
     public DefaultFieldCaptorRegistry(
             IBodyParserRegistry bodyParserRegistry, WebCaptorProperties.EventDetails properties,
-            HandlerExceptionResolver resolver, List<IHttpEventExtension> extensions,
-            IWebCaptorEventPublisher publisher, DefaultErrorAttributes errorAttributes
+            HandlerExceptionResolver resolver, DefaultErrorAttributes errorAttributes
     ) {
         if (properties.isIncludeEndpointExists())
             this.register(new RequestEndpointExistsCaptor());

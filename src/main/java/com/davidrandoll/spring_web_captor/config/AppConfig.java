@@ -51,9 +51,7 @@ public class AppConfig {
     @ConditionalOnMissingBean
     @Conditional(IsWebCaptorEnabled.class)
     public IHttpEventPublisher httpEventPublisher(
-            IWebCaptorEventPublisher publisher,
-            List<IHttpEventExtension> extensions,
-            IFieldCaptorRegistry fieldCaptorRegistry
+            IWebCaptorEventPublisher publisher, List<IHttpEventExtension> extensions, IFieldCaptorRegistry fieldCaptorRegistry
     ) {
         return new DefaultHttpEventPublisher(publisher, extensions, fieldCaptorRegistry);
     }
@@ -63,12 +61,12 @@ public class AppConfig {
     @Conditional(IsWebCaptorEnabled.class)
     public IFieldCaptorRegistry fieldCaptorRegistry(
             IBodyParserRegistry bodyParserRegistry, WebCaptorProperties properties,
-            @Lazy @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver, List<IHttpEventExtension> extensions,
-            IWebCaptorEventPublisher publisher, DefaultErrorAttributes errorAttributes
+            @Lazy @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver,
+            DefaultErrorAttributes errorAttributes
     ) {
         return new DefaultFieldCaptorRegistry(
                 bodyParserRegistry, properties.getEventDetails(),
-                resolver, extensions, publisher, errorAttributes
+                resolver, errorAttributes
         );
     }
 
@@ -98,24 +96,15 @@ public class AppConfig {
     @Order(Ordered.HIGHEST_PRECEDENCE + 1)
     @ConditionalOnMissingBean(name = "httpResponseEventPublisher", ignored = HttpResponseEventPublisher.class)
     @Conditional(IsWebCaptorEnabled.class)
-    public HttpResponseEventPublisher httpResponseEventPublisher(
-            IHttpEventPublisher publisher,
-            IBodyParserRegistry bodyParserRegistry
-    ) {
-        return new HttpResponseEventPublisher(
-                publisher, bodyParserRegistry
-        );
+    public HttpResponseEventPublisher httpResponseEventPublisher(IHttpEventPublisher publisher) {
+        return new HttpResponseEventPublisher(publisher);
     }
 
     @Bean("httpRequestEventPublisher")
     @ConditionalOnMissingBean(name = "httpRequestEventPublisher", ignored = HttpRequestEventPublisher.class)
     @Conditional(IsWebCaptorEnabled.class)
-    public HttpRequestEventPublisher httpRequestEventPublisher(
-            IHttpEventPublisher publisher
-    ) {
-        return new HttpRequestEventPublisher(
-                publisher
-        );
+    public HttpRequestEventPublisher httpRequestEventPublisher(IHttpEventPublisher publisher) {
+        return new HttpRequestEventPublisher(publisher);
     }
 
     @Bean("runtimeExceptionResolver")

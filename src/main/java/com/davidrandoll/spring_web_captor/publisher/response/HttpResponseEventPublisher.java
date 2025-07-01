@@ -1,6 +1,5 @@
 package com.davidrandoll.spring_web_captor.publisher.response;
 
-import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
 import com.davidrandoll.spring_web_captor.publisher.IHttpEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPublisher;
@@ -21,7 +20,6 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class HttpResponseEventPublisher extends OncePerRequestFilter {
     private final IHttpEventPublisher publisher;
-    private final IBodyParserRegistry bodyParserRegistry;
 
     /**
      * NOTE: Cannot publish the request event here because the path params are not available here yet.
