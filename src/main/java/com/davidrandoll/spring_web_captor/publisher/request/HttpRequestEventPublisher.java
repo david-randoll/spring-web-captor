@@ -16,7 +16,7 @@ public class HttpRequestEventPublisher implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
-        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.castToCachedBodyHttpServletRequest(request);
+        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request);
         requestWrapper.setEndpointExists(true);
 
         if (!requestWrapper.isErrorController()) {

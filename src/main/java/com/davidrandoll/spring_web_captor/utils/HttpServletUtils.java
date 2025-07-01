@@ -21,12 +21,6 @@ import java.util.Optional;
 public class HttpServletUtils {
     public static final String DEFAULT_IP = "0.0.0.0";
 
-    public CachedBodyHttpServletRequest castToCachedBodyHttpServletRequest(@NonNull HttpServletRequest request) {
-        if (request instanceof CachedBodyHttpServletRequest cachedBodyHttpServletRequest)
-            return cachedBodyHttpServletRequest;
-        throw new ClassCastException("Request is not an instance of CachedBodyHttpServletRequest");
-    }
-
     public CachedBodyHttpServletResponse castToCachedBodyHttpServletResponse(@NonNull HttpServletResponse response) {
         if (response instanceof CachedBodyHttpServletResponse cachedBodyHttpServletResponse)
             return cachedBodyHttpServletResponse;

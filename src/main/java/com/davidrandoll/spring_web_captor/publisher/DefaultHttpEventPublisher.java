@@ -24,7 +24,7 @@ public class DefaultHttpEventPublisher implements IHttpEventPublisher {
 
     @Override
     public void publishRequestEvent(HttpServletRequest request, HttpServletResponse response) {
-        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.castToCachedBodyHttpServletRequest(request);
+        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request);
         if (requestWrapper.isPublished()) return;
         HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent(registry);
         for (IHttpEventExtension extension : httpEventExtensions) {
@@ -41,7 +41,7 @@ public class DefaultHttpEventPublisher implements IHttpEventPublisher {
 
     @Override
     public void publishResponseEvent(HttpServletRequest request, HttpServletResponse response) {
-        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.castToCachedBodyHttpServletRequest(request);
+        CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request);
         CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.castToCachedBodyHttpServletResponse(response);
 
         if (responseWrapper.isPublished()) return;

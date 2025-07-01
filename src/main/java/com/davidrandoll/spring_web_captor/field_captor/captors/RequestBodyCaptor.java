@@ -15,7 +15,7 @@ public class RequestBodyCaptor implements IRequestFieldCaptor {
 
     @Override
     public void capture(HttpServletRequest request, HttpRequestEvent.HttpRequestEventBuilder<?, ?> builder) {
-        var requestWrapper = HttpServletUtils.castToCachedBodyHttpServletRequest(request);
+        var requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request);
         var body = this.getBody(requestWrapper);
         builder.bodyPayload(body);
     }
