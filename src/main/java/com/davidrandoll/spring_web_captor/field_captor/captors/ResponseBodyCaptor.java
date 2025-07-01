@@ -1,6 +1,7 @@
 package com.davidrandoll.spring_web_captor.field_captor.captors;
 
 import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
+import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
 import com.davidrandoll.spring_web_captor.field_captor.IResponseFieldCaptor;
 import com.davidrandoll.spring_web_captor.publisher.response.CachedBodyHttpServletResponse;
@@ -24,7 +25,14 @@ public class ResponseBodyCaptor implements IResponseFieldCaptor {
         try {
             if (responseStatus.is2xxSuccessful()) {
                 responseWrapper.getResponseBody()
-                        .thenAccept(builder::responseBody);
+                        .thenAccept(body -> {
+                            BodyPayload payload = this.bodyParserRegistry.parse(
+                                    // IMPORTANT: double use of the getRequest method to get te original request
+                                    responseWrapper.getRequest().getRequest(),
+                                    body
+                            );
+                            builder.responseBody(payload.getBody());
+                        });
             }
         } catch (IOException e) {
             log.error("Error getting response body", e);

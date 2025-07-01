@@ -1,12 +1,10 @@
 package com.davidrandoll.spring_web_captor.publisher.response;
 
 import com.davidrandoll.spring_web_captor.body_parser.registry.IBodyParserRegistry;
-import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
 import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,20 +23,18 @@ import static java.util.Objects.nonNull;
 public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper {
     @Getter
     private final CachedBodyHttpServletRequest request;
-    private final IBodyParserRegistry bodyParserRegistry;
 
     @Getter
     private boolean isPublished = false;
     private HttpResponseEvent httpResponseEvent;
-    private CompletableFuture<JsonNode> responseBodyFuture;
+    private CompletableFuture<byte[]> responseBodyFuture;
 
     public CachedBodyHttpServletResponse(HttpServletResponse response, CachedBodyHttpServletRequest request, IBodyParserRegistry bodyParserRegistry) {
         super(response);
         this.request = request;
-        this.bodyParserRegistry = bodyParserRegistry;
     }
 
-    public CompletableFuture<JsonNode> getResponseBody() throws IOException {
+    public CompletableFuture<byte[]> getResponseBody() throws IOException {
         if (this.responseBodyFuture != null) return this.responseBodyFuture;
 
         this.responseBodyFuture = new CompletableFuture<>();
@@ -67,12 +63,8 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
         return responseBodyFuture;
     }
 
-    private void getBody(CompletableFuture<JsonNode> future) throws IOException {
-        BodyPayload payload = this.bodyParserRegistry.parse(
-                this.request.getRequest(),
-                this.getContentAsByteArray()
-        );
-        future.complete(payload.getBody());
+    private void getBody(CompletableFuture<byte[]> future) throws IOException {
+        future.complete(this.getContentAsByteArray());
         this.copyBodyToResponse(); // IMPORTANT: copy response back into original response
     }
 
