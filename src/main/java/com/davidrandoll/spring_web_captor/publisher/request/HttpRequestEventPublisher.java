@@ -1,6 +1,5 @@
 package com.davidrandoll.spring_web_captor.publisher.request;
 
-import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.publisher.IHttpEventPublisher;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,8 +19,7 @@ public class HttpRequestEventPublisher implements HandlerInterceptor {
         CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.castToCachedBodyHttpServletRequest(request);
         requestWrapper.setEndpointExists(true);
 
-        HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
-        if (!requestEvent.getPath().equalsIgnoreCase("/error")) {
+        if (!requestWrapper.isErrorController()) {
             publisher.publishRequestEvent(requestWrapper, response);
         }
 

@@ -33,10 +33,10 @@ public class HttpServletUtils {
         throw new ClassCastException("Response is not an instance of CachedBodyHttpServletResponse");
     }
 
-    public CachedBodyHttpServletRequest toCachedBodyHttpServletRequest(@NonNull HttpServletRequest request, IFieldCaptorRegistry registry) {
+    public CachedBodyHttpServletRequest toCachedBodyHttpServletRequest(@NonNull HttpServletRequest request) {
         if (request instanceof CachedBodyHttpServletRequest cachedBodyHttpServletRequest)
             return cachedBodyHttpServletRequest;
-        return new CachedBodyHttpServletRequest(request, registry);
+        return new CachedBodyHttpServletRequest(request);
     }
 
     public CachedBodyHttpServletResponse toCachedBodyHttpServletResponse(@NonNull HttpServletResponse response, CachedBodyHttpServletRequest requestWrapper, IBodyParserRegistry bodyParserRegistry, IFieldCaptorRegistry fieldCaptorRegistry) {

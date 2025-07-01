@@ -18,8 +18,6 @@ import static java.util.Objects.nonNull;
 
 @Slf4j
 public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
-    private final IFieldCaptorRegistry registry;
-
     private byte[] cachedBody;
     @Getter
     @Setter
@@ -29,9 +27,12 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     private boolean isPublished = false;
     private HttpRequestEvent httpRequestEvent;
 
-    public CachedBodyHttpServletRequest(HttpServletRequest request, IFieldCaptorRegistry registry) {
+    public CachedBodyHttpServletRequest(HttpServletRequest request) {
         super(request);
-        this.registry = registry;
+    }
+
+    public boolean isErrorController(){
+        return this.getRequestURI().equalsIgnoreCase("/error");
     }
 
     @Override
@@ -60,7 +61,7 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
         return this.cachedBody;
     }
 
-    public HttpRequestEvent toHttpRequestEvent() {
+    public HttpRequestEvent toHttpRequestEvent(IFieldCaptorRegistry registry) {
         if (nonNull(this.httpRequestEvent)) return this.httpRequestEvent;
 
         this.httpRequestEvent = registry

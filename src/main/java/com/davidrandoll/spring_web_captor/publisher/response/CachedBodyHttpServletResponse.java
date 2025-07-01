@@ -85,7 +85,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
     public HttpResponseEvent toHttpResponseEvent() {
         if (nonNull(this.httpResponseEvent)) return this.httpResponseEvent;
 
-        HttpRequestEvent requestEvent = this.request.toHttpRequestEvent();
+        HttpRequestEvent requestEvent = this.request.toHttpRequestEvent(fieldCaptorRegistry);
         this.httpResponseEvent = this.fieldCaptorRegistry
                 .capture(this, new HttpResponseEvent(requestEvent).toBuilder())
                 .build();

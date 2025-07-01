@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -51,9 +52,10 @@ public class AppConfig {
     @Conditional(IsWebCaptorEnabled.class)
     public IHttpEventPublisher httpEventPublisher(
             IWebCaptorEventPublisher publisher,
-            List<IHttpEventExtension> extensions
+            List<IHttpEventExtension> extensions,
+            IFieldCaptorRegistry fieldCaptorRegistry
     ) {
-        return new DefaultHttpEventPublisher(publisher, extensions);
+        return new DefaultHttpEventPublisher(publisher, extensions, fieldCaptorRegistry);
     }
 
     @Bean
@@ -61,7 +63,7 @@ public class AppConfig {
     @Conditional(IsWebCaptorEnabled.class)
     public IFieldCaptorRegistry fieldCaptorRegistry(
             IBodyParserRegistry bodyParserRegistry, WebCaptorProperties properties,
-            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver, List<IHttpEventExtension> extensions,
+            @Lazy @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver, List<IHttpEventExtension> extensions,
             IWebCaptorEventPublisher publisher, DefaultErrorAttributes errorAttributes
     ) {
         return new DefaultFieldCaptorRegistry(

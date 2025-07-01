@@ -3,6 +3,7 @@ package com.davidrandoll.spring_web_captor.publisher;
 import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
 import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
 import com.davidrandoll.spring_web_captor.extensions.IHttpEventExtension;
+import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.publisher.request.CachedBodyHttpServletRequest;
 import com.davidrandoll.spring_web_captor.publisher.response.CachedBodyHttpServletResponse;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
@@ -19,12 +20,13 @@ import java.util.Map;
 public class DefaultHttpEventPublisher implements IHttpEventPublisher {
     private final IWebCaptorEventPublisher publisher;
     private final List<IHttpEventExtension> httpEventExtensions;
+    private final IFieldCaptorRegistry registry;
 
     @Override
     public void publishRequestEvent(HttpServletRequest request, HttpServletResponse response) {
         CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.castToCachedBodyHttpServletRequest(request);
         if (requestWrapper.isPublished()) return;
-        HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
+        HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent(registry);
         for (IHttpEventExtension extension : httpEventExtensions) {
             try {
                 Map<String, Object> additionalData = extension.enrichRequestEvent(request, response, requestEvent);
@@ -44,7 +46,7 @@ public class DefaultHttpEventPublisher implements IHttpEventPublisher {
 
         if (responseWrapper.isPublished()) return;
 
-        HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent();
+        HttpRequestEvent requestEvent = requestWrapper.toHttpRequestEvent(registry);
         HttpResponseEvent responseEvent = responseWrapper.toHttpResponseEvent();
 
         for (IHttpEventExtension extension : httpEventExtensions) {
