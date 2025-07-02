@@ -1,4 +1,4 @@
-package com.davidrandoll.spring_web_captor.app_property.body;
+package com.davidrandoll.spring_web_captor.app_property.request_body;
 
 import com.davidrandoll.spring_web_captor.WebCaptorApplication;
 import com.davidrandoll.spring_web_captor.setup.EventCaptureListener;
