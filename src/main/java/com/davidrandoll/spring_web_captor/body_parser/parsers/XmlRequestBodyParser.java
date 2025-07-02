@@ -3,8 +3,8 @@ package com.davidrandoll.spring_web_captor.body_parser.parsers;
 import com.davidrandoll.spring_web_captor.body_parser.IRequestBodyParser;
 import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import jakarta.servlet.ServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.annotation.Order;
@@ -15,7 +15,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Order(1)
 public class XmlRequestBodyParser implements IRequestBodyParser {
-    private final XmlMapper xmlMapper;
+    private final ObjectMapper xmlMapper;
 
     @Override
     public boolean supports(String contentType) {
