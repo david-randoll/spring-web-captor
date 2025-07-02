@@ -39,7 +39,7 @@ class ResponseHeadersExcludedTest {
                 .andExpect(status().isOk());
 
         var responseEvent = eventCaptureListener.getResponseEvents().getFirst();
-        var responseHeaders = responseEvent.getHeaders();
+        var responseHeaders = responseEvent.getResponseHeaders();
 
         assertTrue(responseHeaders.isEmpty(), "Response headers should not be captured");
     }

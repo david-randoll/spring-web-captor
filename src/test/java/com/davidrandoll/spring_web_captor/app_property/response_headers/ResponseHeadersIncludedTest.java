@@ -40,7 +40,7 @@ class ResponseHeadersIncludedTest {
                 .andExpect(status().isOk());
 
         var responseEvent = eventCaptureListener.getResponseEvents().getFirst();
-        var responseHeaders = responseEvent.getHeaders();
+        var responseHeaders = responseEvent.getResponseHeaders();
 
         assertNotNull(responseHeaders);
         assertEquals("CustomValue", responseHeaders.getFirst("X-Custom-Header"));
