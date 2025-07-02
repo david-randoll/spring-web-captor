@@ -1,4 +1,4 @@
-package com.davidrandoll.spring_web_captor.header;
+package com.davidrandoll.spring_web_captor.request_header;
 
 import com.davidrandoll.spring_web_captor.WebCaptorApplication;
 import com.davidrandoll.spring_web_captor.setup.EventCaptureListener;
@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = WebCaptorApplication.class)
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class HeaderTestControllerTest {
+class RequestHeaderTestControllerTest {
     @Autowired
     private MockMvc mockMvc;
 

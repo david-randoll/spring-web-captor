@@ -1,4 +1,4 @@
-package com.davidrandoll.spring_web_captor.header;
+package com.davidrandoll.spring_web_captor.request_header;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/test/headers")
-public class HeaderTestController {
+public class RequestHeaderTestController {
 
     @GetMapping("/basic")
     public ResponseEntity<String> basic(@RequestHeader(value = "X-Test-Header", required = false) String header) {
