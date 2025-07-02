@@ -1,4 +1,4 @@
-package com.davidrandoll.spring_web_captor.app_property;
+package com.davidrandoll.spring_web_captor.app_property.endpoint_exists;
 
 import com.davidrandoll.spring_web_captor.WebCaptorApplication;
 import com.davidrandoll.spring_web_captor.setup.EventCaptureListener;
@@ -12,7 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,10 +19,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = WebCaptorApplication.class)
 @AutoConfigureMockMvc
 @TestPropertySource(properties = {
-        "web-captor.event-details.include-request-body=true"
+        "web-captor.event-details.include-endpoint-exists=true"
 })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RequestBodyCaptureEnabledTest {
+class EndpointExistsEnabledTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -36,14 +35,13 @@ class RequestBodyCaptureEnabledTest {
     }
 
     @Test
-    void testRequestBodyCapturedWhenEnabled() throws Exception {
+    void testEndpointExistsIsCapturedWhenEnabled() throws Exception {
         mockMvc.perform(post("/test/property/echo")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"key\":\"value\"}"))
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("hello"))
                 .andExpect(status().isOk());
 
-        var requestEvent = eventCaptureListener.getRequestEvents().getFirst();
-        assertNotNull(requestEvent.getRequestBody());
-        assertTrue(requestEvent.getRequestBody().toString().contains("key"));
+        var request = eventCaptureListener.getRequestEvents().getFirst();
+        assertTrue(request.isEndpointExists(), "Expected endpointExists to be true");
     }
 }
