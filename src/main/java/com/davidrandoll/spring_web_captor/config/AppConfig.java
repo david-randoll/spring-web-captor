@@ -17,6 +17,7 @@ import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPubl
 import com.davidrandoll.spring_web_captor.publisher.response.HttpResponseEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.response.RuntimeExceptionResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
@@ -27,12 +28,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.util.List;
 
 @Configuration
 public class AppConfig {
+    @Bean
+    @ConditionalOnMissingBean
+    @Conditional(IsWebCaptorEnabled.class)
+    public XmlMapper xmlMapper() {
+        return Jackson2ObjectMapperBuilder
+                .xml()
+                .build();
+    }
+
     @Bean
     @ConditionalOnMissingBean
     @Conditional(IsWebCaptorEnabled.class)
@@ -43,8 +54,8 @@ public class AppConfig {
     @Bean
     @ConditionalOnMissingBean
     @Conditional(IsWebCaptorEnabled.class)
-    public IBodyParserRegistry bodyParserRegistry(ObjectMapper objectMapper, WebCaptorProperties properties) {
-        return new DefaultBodyParserRegistry(objectMapper, properties.getEventDetails());
+    public IBodyParserRegistry bodyParserRegistry(ObjectMapper objectMapper, XmlMapper xmlMapper, WebCaptorProperties properties) {
+        return new DefaultBodyParserRegistry(objectMapper, xmlMapper, properties.getEventDetails());
     }
 
     @Bean
