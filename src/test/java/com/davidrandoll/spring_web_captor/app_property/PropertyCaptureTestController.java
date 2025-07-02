@@ -22,4 +22,26 @@ public class PropertyCaptureTestController {
         return ResponseEntity.ok("Uploaded: " + file.getOriginalFilename());
     }
 
+    @GetMapping("/response-headers")
+    public ResponseEntity<String> responseHeaders() {
+        return ResponseEntity.ok()
+                .header("X-Custom-Header", "CustomValue")
+                .body("Headers OK");
+    }
+
+    @GetMapping("/response-status/{code}")
+    public ResponseEntity<String> responseStatus(@PathVariable int code) {
+        return ResponseEntity.status(code).body("Status " + code);
+    }
+
+    @GetMapping("/response-body")
+    public ResponseEntity<String> responseBody() {
+        return ResponseEntity.ok("Response Body Content");
+    }
+
+    @GetMapping("/error-detail")
+    public ResponseEntity<String> errorDetail() {
+        throw new RuntimeException("Simulated error for testing");
+    }
+
 }
