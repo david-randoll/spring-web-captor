@@ -5,7 +5,7 @@ import jakarta.servlet.ServletRequest;
 
 import java.io.IOException;
 
-public interface IBodyParser {
+public interface IRequestBodyParser {
     boolean supports(String contentType);
 
     BodyPayload parse(ServletRequest request, byte[] body) throws IOException;

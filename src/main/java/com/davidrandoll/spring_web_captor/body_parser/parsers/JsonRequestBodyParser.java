@@ -1,6 +1,6 @@
 package com.davidrandoll.spring_web_captor.body_parser.parsers;
 
-import com.davidrandoll.spring_web_captor.body_parser.IBodyParser;
+import com.davidrandoll.spring_web_captor.body_parser.IRequestBodyParser;
 import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -13,7 +13,7 @@ import java.io.IOException;
 
 @RequiredArgsConstructor
 @Order(1)
-public class JsonBodyParser implements IBodyParser {
+public class JsonRequestBodyParser implements IRequestBodyParser {
     private final ObjectMapper objectMapper;
 
     @Override

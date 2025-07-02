@@ -22,6 +22,6 @@ public class RequestBodyCaptor implements IRequestFieldCaptor {
 
     public BodyPayload getBody(CachedBodyHttpServletRequest request) {
         byte[] cachedBody = request.getCachedBody();
-        return bodyParserRegistry.parse(request.getRequest(), cachedBody);
+        return bodyParserRegistry.parseRequest(request.getRequest(), cachedBody);
     }
 }

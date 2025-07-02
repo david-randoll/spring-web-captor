@@ -6,12 +6,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Slf4j
@@ -83,5 +86,21 @@ public class HttpServletUtils {
         if (attributes == null) return null;
 
         return ((ServletRequestAttributes) attributes).getRequest();
+    }
+
+    public static Charset getCharset(String contentType) {
+        Charset charset = null;
+        if (contentType != null) {
+            try {
+                MediaType mediaType = MediaType.parseMediaType(contentType);
+                if (mediaType.getCharset() != null) {
+                    charset = mediaType.getCharset();
+                }
+            } catch (Exception e) {
+                // Ignore parsing errors, fallback to UTF-8
+            }
+        }
+        return Optional.ofNullable(charset)
+                .orElse(StandardCharsets.UTF_8);
     }
 }

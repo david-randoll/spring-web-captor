@@ -26,10 +26,8 @@ public class ResponseBodyCaptor implements IResponseFieldCaptor {
             if (responseStatus.is2xxSuccessful()) {
                 responseWrapper.getResponseBody()
                         .thenAccept(body -> {
-                            BodyPayload payload = this.bodyParserRegistry.parse(
-                                    // IMPORTANT: double use of the getRequest method to get te original request
-                                    responseWrapper.getRequest().getRequest(),
-                                    body
+                            BodyPayload payload = this.bodyParserRegistry.parseResponse(
+                                    responseWrapper, body
                             );
                             builder.responseBody(payload.getBody());
                         });

@@ -37,9 +37,10 @@ public class ResponseBodyTestController {
         return ResponseEntity.ok(null);
     }
 
-    @GetMapping("/utf8")
+    @GetMapping(value = "/utf8", produces = "text/plain;charset=UTF-8")
     public ResponseEntity<String> utf8() {
-        return ResponseEntity.ok("Emoji 😃 and Unicode ✓");
+        return ResponseEntity
+                .ok("Emoji 😃 and Unicode ✓");
     }
 
     @GetMapping("/special-chars")

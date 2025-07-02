@@ -1,6 +1,6 @@
 package com.davidrandoll.spring_web_captor.body_parser.parsers;
 
-import com.davidrandoll.spring_web_captor.body_parser.IBodyParser;
+import com.davidrandoll.spring_web_captor.body_parser.IRequestBodyParser;
 import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -17,7 +17,7 @@ import org.springframework.util.MultiValueMap;
 import java.io.IOException;
 
 @Order(1)
-public class FormUrlEncodedBodyParser implements IBodyParser {
+public class FormUrlEncodedRequestBodyParser implements IRequestBodyParser {
     @Override
     public boolean supports(String contentType) {
         return contentType != null && contentType.contains("x-www-form-urlencoded");

@@ -1,6 +1,6 @@
 package com.davidrandoll.spring_web_captor.body_parser.parsers;
 
-import com.davidrandoll.spring_web_captor.body_parser.IBodyParser;
+import com.davidrandoll.spring_web_captor.body_parser.IRequestBodyParser;
 import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -17,7 +17,7 @@ import java.io.IOException;
 
 @Order(1)
 @RequiredArgsConstructor
-public class MultipartBodyParser implements IBodyParser {
+public class MultipartRequestBodyParser implements IRequestBodyParser {
     private final boolean includeFiles;
 
     @Override
