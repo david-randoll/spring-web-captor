@@ -7,7 +7,7 @@ import com.davidrandoll.spring_web_captor.field_captor.IResponseFieldCaptor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.OrderComparator;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,13 +29,13 @@ public abstract class AbstractFieldCaptorRegistry implements IFieldCaptorRegistr
 
     protected List<IRequestFieldCaptor> getRequestCaptors() {
         return requestCaptors.stream()
-                .sorted(OrderComparator.INSTANCE)
+                .sorted(AnnotationAwareOrderComparator.INSTANCE)
                 .toList();
     }
 
     protected List<IResponseFieldCaptor> getResponseCaptors() {
         return responseCaptors.stream()
-                .sorted(OrderComparator.INSTANCE)
+                .sorted(AnnotationAwareOrderComparator.INSTANCE)
                 .toList();
     }
 

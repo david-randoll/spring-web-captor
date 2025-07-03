@@ -42,6 +42,6 @@ class RequestBodyXmlTestControllerTest {
                 .andExpect(status().isOk());
 
         var request = eventCaptureListener.getRequestEvents().getFirst();
-        assertEquals(xml, request.getRequestBody().asText());
+        assertEquals("David", request.getRequestBody().get("name").asText());
     }
 }

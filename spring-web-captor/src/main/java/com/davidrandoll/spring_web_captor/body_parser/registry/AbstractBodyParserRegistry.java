@@ -6,7 +6,7 @@ import com.davidrandoll.spring_web_captor.event.BodyPayload;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.OrderComparator;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,15 +28,14 @@ public abstract class AbstractBodyParserRegistry implements IBodyParserRegistry 
     }
 
     protected List<IRequestBodyParser> getRequestParsers() {
-        var sortedList = requestBodyParsers.stream()
-                .sorted(OrderComparator.INSTANCE)
+        return requestBodyParsers.stream()
+                .sorted(AnnotationAwareOrderComparator.INSTANCE)
                 .toList();
-        return sortedList;
     }
 
     protected List<IResponseBodyParser> getResponseBodyParsers() {
         return responseBodyParsers.stream()
-                .sorted(OrderComparator.INSTANCE)
+                .sorted(AnnotationAwareOrderComparator.INSTANCE)
                 .toList();
     }
 
