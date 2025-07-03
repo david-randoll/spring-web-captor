@@ -12,13 +12,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = WebCaptorXmlApplication.class)
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class RequestBodyXmlTestControllerTest {
+class BodyXmlTestControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
@@ -43,5 +44,15 @@ class RequestBodyXmlTestControllerTest {
 
         var request = eventCaptureListener.getRequestEvents().getFirst();
         assertEquals("David", request.getRequestBody().get("name").asText());
+    }
+
+    @Test
+    void testXmlResponse() throws Exception {
+        mockMvc.perform(get("/test/body/xml/response"))
+                .andExpect(status().isOk());
+
+        var response = eventCaptureListener.getResponseEvents().getFirst();
+        var body = response.getResponseBody();
+        assertEquals("Hello", body.get("message").asText());
     }
 }
