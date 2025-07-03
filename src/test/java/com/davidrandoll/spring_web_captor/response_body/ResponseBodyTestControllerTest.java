@@ -2,7 +2,6 @@ package com.davidrandoll.spring_web_captor.response_body;
 
 import com.davidrandoll.spring_web_captor.WebCaptorApplication;
 import com.davidrandoll.spring_web_captor.setup.EventCaptureListener;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -56,10 +55,8 @@ class ResponseBodyTestControllerTest {
                 .andExpect(status().isOk());
 
         var response = eventCaptureListener.getResponseEvents().getFirst();
-        JsonNode body = response.getResponseBody();
-        // check the message in the XML response
-        assertTrue(body.isObject() && body.has("message"), "Response body should contain 'message' field");
-        assertEquals("Hello", body.get("message").asText());
+        var body = response.getResponseBody().asText();
+        assertTrue(body.equalsIgnoreCase("<response><message>Hello</message></response>"));
     }
 
     @Test
