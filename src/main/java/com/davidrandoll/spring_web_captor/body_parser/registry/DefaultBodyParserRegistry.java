@@ -6,13 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DefaultBodyParserRegistry extends AbstractBodyParserRegistry {
     public DefaultBodyParserRegistry(ObjectMapper objectMapper, WebCaptorProperties.EventDetails properties) {
-        //var xmlMapper = Jackson2ObjectMapperBuilder.xml().build();
-
         register(new JsonRequestBodyParser(objectMapper));
         register(new JsonResponseBodyParser(objectMapper));
-
-        //register(new XmlRequestBodyParser(xmlMapper));
-        //register(new XmlResponseBodyParser(xmlMapper));
 
         register(new MultipartRequestBodyParser(properties.isIncludeMultipartFiles()));
         register(new FormUrlEncodedRequestBodyParser());
