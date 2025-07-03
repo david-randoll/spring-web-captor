@@ -28,9 +28,10 @@ public abstract class AbstractBodyParserRegistry implements IBodyParserRegistry 
     }
 
     protected List<IRequestBodyParser> getRequestParsers() {
-        return requestBodyParsers.stream()
+        var sortedList = requestBodyParsers.stream()
                 .sorted(OrderComparator.INSTANCE)
                 .toList();
+        return sortedList;
     }
 
     protected List<IResponseBodyParser> getResponseBodyParsers() {
