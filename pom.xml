@@ -18,6 +18,7 @@
     </description>
     <modules>
         <module>spring-web-captor</module>
+        <module>spring-web-captor-xml</module>
     </modules>
     <properties>
         <java.version>21</java.version>

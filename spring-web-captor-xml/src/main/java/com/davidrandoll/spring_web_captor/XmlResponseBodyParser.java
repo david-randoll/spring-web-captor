@@ -1,4 +1,4 @@
-package com.davidrandoll.spring_web_captor.body_parser.parsers;
+package com.davidrandoll.spring_web_captor;
 
 import com.davidrandoll.spring_web_captor.body_parser.IResponseBodyParser;
 import com.davidrandoll.spring_web_captor.event.BodyPayload;

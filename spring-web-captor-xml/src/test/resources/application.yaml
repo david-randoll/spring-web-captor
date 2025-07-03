@@ -1,0 +1,6 @@
+server:
+  port: 8086
+
+logging:
+  level:
+    com.davidrandoll.spring_web_captor: DEBUG
