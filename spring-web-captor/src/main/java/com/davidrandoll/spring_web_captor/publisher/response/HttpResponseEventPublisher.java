@@ -29,9 +29,9 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException, ServletException {
         CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request);
-        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(
-                response, requestWrapper
-        );
+        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper);
+
+        //boolean shouldPublishRequest = publisher.shouldPublishRequestEvent(requestWrapper, responseWrapper);
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);

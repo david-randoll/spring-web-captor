@@ -1,6 +1,7 @@
 package com.davidrandoll.spring_web_captor.publisher.request;
 
 import com.davidrandoll.spring_web_captor.publisher.IHttpEventPublisher;
+import com.davidrandoll.spring_web_captor.publisher.response.CachedBodyHttpServletResponse;
 import com.davidrandoll.spring_web_captor.utils.HttpServletUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,10 +18,11 @@ public class HttpRequestEventPublisher implements HandlerInterceptor {
     @Override
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request);
+        CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper);
         requestWrapper.setEndpointExists(true);
 
         if (!requestWrapper.isErrorController()) {
-            publisher.publishRequestEvent(requestWrapper, response);
+            publisher.publishRequestEvent(requestWrapper, responseWrapper);
         }
 
         return true;
