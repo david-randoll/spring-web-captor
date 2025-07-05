@@ -35,7 +35,11 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
-            publishRequestEventIfNotPublishedAlready(requestWrapper, responseWrapper);
+            if (!requestWrapper.isPublished()) {
+                // If the request event is not published, we need to publish it here.
+                // This can happen if the request does not reach the controller or if an error occurs before the filter chain is executed.
+                publisher.publishRequestEvent(request, response);
+            }
             responseWrapper.getResponseBody()
                     .thenRun(() -> publisher.publishResponseEvent(requestWrapper, responseWrapper));
         } catch (Exception ex) {
@@ -45,17 +49,5 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
         } finally {
             responseWrapper.copyBodyToResponse(); // IMPORTANT: copy response back into original response
         }
-    }
-
-    /**
-     * There are some times when the {@link HttpRequestEventPublisher#preHandle} method is not called,
-     * for example, when the endpoint does not exist or when the request return a 4xx error before the filter chain is executed.
-     * In this case, we need to publish the request event here.
-     *
-     * @param request  the request wrapper that contains the request event
-     * @param response the response wrapper that contains the response event
-     */
-    private void publishRequestEventIfNotPublishedAlready(CachedBodyHttpServletRequest request, CachedBodyHttpServletResponse response) {
-        publisher.publishRequestEvent(request, response);
     }
 }

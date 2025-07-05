@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run All Tests" type="Multirun" separateTabs="false" reuseTabsWithFailures="false" startOneByOne="true" markFailedProcess="true" hideSuccessProcess="false" delayTime="0.0">
+    <runConfiguration name="All in spring-web-captor" type="JUnit" />
+    <runConfiguration name="All in spring-web-captor-xml" type="JUnit" />
+    <method v="2" />
+  </configuration>
+</component>
