@@ -80,11 +80,19 @@ public class ClientDetailsHttpEventExtension implements IHttpEventExtension {
     @Override
     public Map<String, Object> enrichRequestEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent event) {
         // return a map with the user ip and user agent here
+        return Map.of(
+                "userIp", req.getRemoteAddr(),
+                "userAgent", req.getHeader("User-Agent")
+        );
     }
 
     @Override
     public Map<String, Object> enrichResponseEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent reqEvent, HttpResponseEvent resEvent) {
         // return a map with the user ip and user agent here
+        return Map.of(
+                "userIp", req.getRemoteAddr(),
+                "userAgent", req.getHeader("User-Agent")
+        );
     }
 }
 ```
@@ -180,7 +188,7 @@ The registry is there so that you can use the built-in parsers or your own custo
 > By default, the library includes request body parsers for JSON, XML, multipart,
 > x-www-form-urlencoded and a fallback parser for plain text.
 
-## Customizing Field Capture: IRequestFieldCaptor and IResponseFieldCaptor
+## Customizing Field Capture
 
 Spring Web Captor gives you fine-grained control over which fields are captured from requests and responses by allowing
 you to implement the `IRequestFieldCaptor` and `IResponseFieldCaptor` interfaces. These interfaces let you add,
@@ -205,10 +213,10 @@ import javax.servlet.http.HttpServletRequest;
 @Order(1)
 public class XRequestTokenFieldCaptor implements IRequestFieldCaptor {
     @Override
-    public void captureFields(HttpServletRequest servletRequest, HttpRequestEvent event) {
+    public void capture(HttpServletRequest request, HttpRequestEvent.HttpRequestEventBuilder<?, ?> builder) {
         String token = servletRequest.getHeader("X-Request-Token");
         if (token != null) {
-            event.addAdditionalData("xRequestToken", token);
+            builder.additionalData("xRequestToken", token);
         }
     }
 }
@@ -234,10 +242,10 @@ import javax.servlet.http.HttpServletResponse;
 @Order(1)
 public class XResponseTokenFieldCaptor implements IResponseFieldCaptor {
     @Override
-    public void captureFields(HttpServletResponse servletResponse, HttpRequestEvent reqEvent, HttpResponseEvent resEvent) {
+    public void capture(HttpServletResponse response, HttpResponseEvent.HttpResponseEventBuilder<?, ?> builder) {
         String token = servletResponse.getHeader("X-Response-Token");
         if (token != null) {
-            resEvent.addAdditionalData("xResponseToken", token);
+            builder.additionalData("xResponseToken", token);
         }
     }
 }
@@ -269,6 +277,7 @@ Implement either (or both) to define custom logic for event publishing.
 Here's how you might implement a condition to publish events only if the user is authenticated:
 
 ```java
+
 @Component
 @Order(1)
 public class AuthenticatedRequestPublishCondition implements IHttpRequestPublishCondition {
@@ -301,6 +310,7 @@ AND).
     - Path Variables
     - Headers (including multiple values)
     - Body (JSON, XML, form-data, files, etc.)
+    - custom fields added by `IRequestFieldCaptor` or `IHttpEventExtension`
 
 - **Response:**
     - All fields from the request event
