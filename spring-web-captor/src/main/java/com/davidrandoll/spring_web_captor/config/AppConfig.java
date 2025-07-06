@@ -9,6 +9,7 @@ import com.davidrandoll.spring_web_captor.extensions.UserAgentHttpEventExtension
 import com.davidrandoll.spring_web_captor.field_captor.registry.DefaultFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.properties.*;
+import com.davidrandoll.spring_web_captor.publish_conditions.ExcludedPathPublishCondition;
 import com.davidrandoll.spring_web_captor.publish_conditions.IHttpRequestPublishCondition;
 import com.davidrandoll.spring_web_captor.publish_conditions.IHttpResponsePublishCondition;
 import com.davidrandoll.spring_web_captor.publisher.DefaultHttpEventPublisher;
@@ -29,6 +30,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.util.List;
@@ -118,5 +120,12 @@ public class AppConfig {
     @Conditional(IsWebCaptorEnabled.class)
     public RuntimeExceptionResolver runtimeExceptionResolver(ObjectMapper mapper) {
         return new RuntimeExceptionResolver(mapper);
+    }
+
+    @Bean("excludedPathPublishCondition")
+    @ConditionalOnMissingBean(name = "excludedPathPublishCondition", ignored = ExcludedPathPublishCondition.class)
+    @Conditional(IsWebCaptorEnabled.class)
+    public ExcludedPathPublishCondition excludedPathPublishCondition(WebCaptorProperties properties) {
+        return new ExcludedPathPublishCondition(properties, new AntPathMatcher());
     }
 }
