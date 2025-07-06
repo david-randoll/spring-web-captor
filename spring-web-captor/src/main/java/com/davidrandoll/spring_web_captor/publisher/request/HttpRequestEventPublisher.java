@@ -21,7 +21,8 @@ public class HttpRequestEventPublisher implements HandlerInterceptor {
         CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper);
         requestWrapper.setEndpointExists(true);
 
-        if (!requestWrapper.isErrorController()) {
+        boolean shouldPublishRequest = publisher.shouldPublishRequestEvent(requestWrapper, responseWrapper);
+        if (!requestWrapper.isErrorController() && shouldPublishRequest) {
             publisher.publishRequestEvent(requestWrapper, responseWrapper);
         }
 

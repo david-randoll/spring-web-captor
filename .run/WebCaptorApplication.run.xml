@@ -4,7 +4,7 @@
     <module name="spring-web-captor" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.davidrandoll.spring_web_captor.*" />
+        <option name="PATTERN" value="com.davidrandoll.spring_web_captor.publish_conditions.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

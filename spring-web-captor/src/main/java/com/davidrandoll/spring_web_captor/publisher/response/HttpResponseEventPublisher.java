@@ -31,17 +31,20 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
         CachedBodyHttpServletRequest requestWrapper = HttpServletUtils.toCachedBodyHttpServletRequest(request);
         CachedBodyHttpServletResponse responseWrapper = HttpServletUtils.toCachedBodyHttpServletResponse(response, requestWrapper);
 
-        //boolean shouldPublishRequest = publisher.shouldPublishRequestEvent(requestWrapper, responseWrapper);
+        boolean shouldPublishRequest = publisher.shouldPublishRequestEvent(requestWrapper, responseWrapper);
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
-            if (!requestWrapper.isPublished()) {
+            if (!requestWrapper.isPublished() && shouldPublishRequest) {
                 // If the request event is not published, we need to publish it here.
                 // This can happen if the request does not reach the controller or if an error occurs before the filter chain is executed.
                 publisher.publishRequestEvent(request, response);
             }
-            responseWrapper.getResponseBody()
-                    .thenRun(() -> publisher.publishResponseEvent(requestWrapper, responseWrapper));
+            boolean shouldPublishResponse = publisher.shouldPublishResponseEvent(requestWrapper, responseWrapper);
+            if (shouldPublishResponse) {
+                responseWrapper.getResponseBody()
+                        .thenRun(() -> publisher.publishResponseEvent(requestWrapper, responseWrapper));
+            }
         } catch (Exception ex) {
             responseWrapper.getResponseBody()
                     .completeExceptionally(ex);

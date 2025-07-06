@@ -4,8 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface IHttpEventPublisher {
-
     void publishRequestEvent(HttpServletRequest request, HttpServletResponse response);
-
     void publishResponseEvent(HttpServletRequest request, HttpServletResponse response);
+    boolean shouldPublishRequestEvent(HttpServletRequest request, HttpServletResponse response);
+    boolean shouldPublishResponseEvent(HttpServletRequest request, HttpServletResponse response);
 }

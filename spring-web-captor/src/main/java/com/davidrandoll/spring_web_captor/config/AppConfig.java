@@ -9,6 +9,8 @@ import com.davidrandoll.spring_web_captor.extensions.UserAgentHttpEventExtension
 import com.davidrandoll.spring_web_captor.field_captor.registry.DefaultFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.field_captor.registry.IFieldCaptorRegistry;
 import com.davidrandoll.spring_web_captor.properties.*;
+import com.davidrandoll.spring_web_captor.publish_conditions.IHttpRequestPublishCondition;
+import com.davidrandoll.spring_web_captor.publish_conditions.IHttpResponsePublishCondition;
 import com.davidrandoll.spring_web_captor.publisher.DefaultHttpEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.DefaultWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.IHttpEventPublisher;
@@ -51,9 +53,13 @@ public class AppConfig {
     @ConditionalOnMissingBean
     @Conditional(IsWebCaptorEnabled.class)
     public IHttpEventPublisher httpEventPublisher(
-            IWebCaptorEventPublisher publisher, List<IHttpEventExtension> extensions, IFieldCaptorRegistry fieldCaptorRegistry
+            IWebCaptorEventPublisher publisher, List<IHttpEventExtension> extensions, IFieldCaptorRegistry fieldCaptorRegistry,
+            List<IHttpRequestPublishCondition> requestPublishConditions, List<IHttpResponsePublishCondition> responsePublishConditions
     ) {
-        return new DefaultHttpEventPublisher(publisher, extensions, fieldCaptorRegistry);
+        return new DefaultHttpEventPublisher(
+                publisher, extensions, fieldCaptorRegistry,
+                requestPublishConditions, responsePublishConditions
+        );
     }
 
     @Bean
