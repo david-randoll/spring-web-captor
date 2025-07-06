@@ -251,6 +251,47 @@ public class XResponseTokenFieldCaptor implements IResponseFieldCaptor {
 
 > **Tip:** You can implement multiple captors and control their order of execution with the `@Order` annotation.
 
+## Conditional HTTP Event Publishing
+
+Spring Web Captor allows you to control exactly when HTTP request and response events are published by implementing
+conditional interfaces. This enables you to filter out specific requests or responses based on any logic you need (e.g.,
+only publish events for authenticated users, or requests to certain paths).
+
+There are two main interfaces for this purpose:
+
+- `IHttpRequestPublishCondition`
+- `IHttpResponsePublishCondition`
+
+Implement either (or both) to define custom logic for event publishing.
+
+### Example: Only Publish Events for Authenticated Requests
+
+Here's how you might implement a condition to publish events only if the user is authenticated:
+
+```java
+@Component
+@Order(1)
+public class AuthenticatedRequestPublishCondition implements IHttpRequestPublishCondition {
+    @Override
+    public boolean shouldPublishRequest(HttpServletRequest request, HttpServletResponse response) {
+        // Example: Only publish if a user principal is present (i.e., the user is authenticated)
+        return request.getUserPrincipal() != null;
+    }
+}
+```
+
+You can register multiple condition beans. All conditions must return `true` for the event to be published (logical
+AND).
+
+> **Note:** If you want to exclude requests to specific endpoints (such as health checks or documentation), you can do
+> this easily using the built-in app property `web-captor.excluded-endpoints` in your configuration, without
+> needing custom code.
+
+**Summary:**
+
+- Use `IHttpRequestPublishCondition` and/or `IHttpResponsePublishCondition` for programmatic, logic-based control.
+- Use the `excluded-endpoints` property for simple endpoint/path/method exclusion.
+
 ## Captured Data
 
 - **Request:**
