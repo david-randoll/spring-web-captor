@@ -5,6 +5,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "web-captor")
@@ -16,6 +19,8 @@ public class WebCaptorProperties {
 
     @NestedConfigurationProperty
     private AdditionalDetails additionalDetails = new AdditionalDetails();
+
+    private List<ExcludedRequest> excludedEndpoints = new ArrayList<>();
 
     @Data
     public static class AdditionalDetails {
@@ -39,5 +44,11 @@ public class WebCaptorProperties {
         private boolean includeResponseBody = true;
         private boolean includeResponseStatus = true;
         private boolean includeErrorDetails = true;
+    }
+
+    @Data
+    public static class ExcludedRequest {
+        private String method = "*"; // Default to all methods
+        private String path;
     }
 }
