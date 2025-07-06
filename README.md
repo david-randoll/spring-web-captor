@@ -1,19 +1,28 @@
 # Spring Web Captor
 
-A Spring Web library that intercepts and captures HTTP request/response data-including URI, path, query parameters, headers, and request/response body (including files) and publishes an event with this data.
+A Spring Web library that intercepts and captures HTTP request/response data-including URI, path, query parameters,
+headers, and request/response body (including files) and publishes an event with this data.
 
 ## Features
 
-- **Automatic HTTP interception:** Captures all incoming HTTP requests and outgoing responses in your Spring Boot application.
-- **Rich event data:** Publishes events containing details such as method, path, query/path parameters, headers, and full request/response.
+- **Automatic HTTP interception:** Captures all incoming HTTP requests and outgoing responses in your Spring Boot
+  application.
+- **Rich event data:** Publishes events containing details such as method, path, query/path parameters, headers, and
+  full request/response.
 - **Multipart & file support:** Handles multipart/form-data and file uploads.
 - **Content type handling:** Supports JSON, XML, plain text, form data, and more.
 - **Spring Boot integration:** Provides auto-configuration for easy setup in Spring Boot projects.
+- **Conditional HTTP Event Publishing:** Interfaces like `IHttpRequestPublishCondition` and
+  `IHttpResponsePublishCondition` allow flexible, condition-based publishing of HTTP events.
+- **Excluded Endpoints Support:** Easily configure HTTP methods and paths to exclude from event publishing.
+- **Extensible Publisher & Parsing:** Implement your own `IHttpEventPublisher`, `IRequestBodyParser`,
+  `IResponseBodyParser`, `IRequestFieldCaptor`, or `IResponseFieldCaptor` for custom event publication and field/body
+  parsing.
 
 ## Usage
 
 1. **Add to your Spring Boot project:**
-   
+
    \*comming soon\* (Publish to Maven Central or GitHub Packages and add dependency instructions here.)
 
 2. **Listen for HTTP events:**
@@ -36,13 +45,16 @@ A Spring Web library that intercepts and captures HTTP request/response data-inc
 
 ## Custom Event Publisher
 
-By default, Spring Web Captor uses Spring's `ApplicationEventPublisher` to publish web capture events. However, if you prefer not to use `ApplicationEventPublisher`, you can provide your own implementation of the `IWebCaptorEventPublisher` interface.
+By default, Spring Web Captor uses Spring's `ApplicationEventPublisher` to publish web capture events. However, if you
+prefer not to use `ApplicationEventPublisher`, you can provide your own implementation of the `IWebCaptorEventPublisher`
+interface.
 
 For example, you could publish events to a message broker such as RabbitMQ, Kafka, or any other system as needed.
 
 ### Example
 
 ```java
+
 @Component
 public class MyCustomEventPublisher implements IWebCaptorEventPublisher {
     @Override
@@ -57,13 +69,15 @@ You can then configure your application to use this custom publisher when settin
 
 ## Extending Event Details
 
-This library supports adding additional details to the request/response event using the `IHttpEventExtension` interface. You can implement this interface to enrich captured HTTP events with custom information.
+This library supports adding additional details to the request/response event using the `IHttpEventExtension` interface.
+You can implement this interface to enrich captured HTTP events with custom information.
 
-For example, the provided `ClientDetailsHttpEventExtension` implementation uses this interface to capture the user's IP address and User-Agent:
+For example, the provided `ClientDetailsHttpEventExtension` implementation uses this interface to capture the user's IP
+address and User-Agent:
 
 ```java
 public class ClientDetailsHttpEventExtension implements IHttpEventExtension {
-     @Override
+    @Override
     public Map<String, Object> enrichRequestEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent event) {
         // return a map with the user ip and user agent here
     }
@@ -75,13 +89,16 @@ public class ClientDetailsHttpEventExtension implements IHttpEventExtension {
 }
 ```
 
-To use your own extension, implement the `IHttpEventExtension` interface and register it as a Spring bean. This allows your additional details to be automatically included in the captured events.
+To use your own extension, implement the `IHttpEventExtension` interface and register it as a Spring bean. This allows
+your additional details to be automatically included in the captured events.
 
 ## Retrieving Additional Details from Published Events
 
-When an HTTP event is published, any additional details added by your `IHttpEventExtension` implementation will be available in the event's `additionalData` map. You can access them as follows:
+When an HTTP event is published, any additional details added by your `IHttpEventExtension` implementation will be
+available in the event's `additionalData` map. You can access them as follows:
 
 ```java
+
 @EventListener
 public void handleHttpEvent(HttpEvent event) {
     // Retrieve additional details by key from the additionalData map
@@ -91,25 +108,97 @@ public void handleHttpEvent(HttpEvent event) {
 }
 ```
 
+## Customizing Request/Response Body Parsing
+
+Spring Web Captor allows you to customize how HTTP bodies are parsed by implementing the `IRequestBodyParser` or
+`IResponseBodyParser` interface. This is useful if you want to support additional content types or handle
+request/response bodies in a specific way.
+
+### Example: Custom JSON Request Body Parser
+
+The library provides a built-in example for parsing JSON request bodies. You can implement your own parser by following
+a similar pattern:
+
+```java
+
+@RequiredArgsConstructor
+@Order(1)
+public class JsonRequestBodyParser implements IRequestBodyParser {
+    private final ObjectMapper objectMapper;
+
+    @Override
+    public boolean supports(String contentType) {
+        return contentType != null && contentType.contains("json");
+    }
+
+    @Override
+    public BodyPayload parse(ServletRequest request, byte[] body) throws IOException {
+        if (ObjectUtils.isEmpty(body)) {
+            return new BodyPayload(JsonNodeFactory.instance.nullNode());
+        }
+        return new BodyPayload(objectMapper.readTree(body));
+    }
+}
+```
+
+```java
+@RequiredArgsConstructor
+@Order(1)
+public class JsonResponseBodyParser implements IResponseBodyParser {
+    private final ObjectMapper objectMapper;
+
+    @Override
+    public boolean supports(String contentType) {
+        return contentType != null && contentType.contains("json");
+    }
+
+    @Override
+    public BodyPayload parse(HttpServletResponse response, byte[] body) throws IOException {
+        if (ObjectUtils.isEmpty(body)) {
+            return new BodyPayload(JsonNodeFactory.instance.nullNode());
+        }
+        return new BodyPayload(objectMapper.readTree(body));
+    }
+}
+```
+
+**How it works:**
+
+- The `supports` method checks if the `Content-Type` header includes `"json"`.
+- If supported, the `parse` method uses Jackson's `ObjectMapper` to deserialize the request body into a `JsonNode`,
+  which is then wrapped in a `BodyPayload` object.
+
+To use your own parser, implement `IRequestBodyParser` or `IResponseBodyParser`, and register it via the
+`IBodyParserRegistry.register` or injects the `DefaultBodyParserRegistry` bean and call the `register` method in your
+configuration class.
+
+The registry is there so that you can use the built-in parsers or your own custom parsers seamlessly.
+
+> **Tip:** You can provide multiple parsers for different content types (e.g., XML, protobuf, etc.) and control their
+> order with the `@Order` annotation.
+> By default, the library includes request body parsers for JSON, XML, multipart,
+> x-www-form-urlencoded and a fallback parser for plain text.
+
 ## Captured Data
 
 - **Request:**
-  - Method (GET, POST, PUT, PATCH, DELETE etc.)
-  - Full URL and Path
-  - Query parameters
-  - Path Variables
-  - Headers (including multiple values)
-  - Body (JSON, XML, form-data, files, etc.)
+    - Method (GET, POST, PUT, PATCH, DELETE etc.)
+    - Full URL and Path
+    - Query parameters
+    - Path Variables
+    - Headers (including multiple values)
+    - Body (JSON, XML, form-data, files, etc.)
 
 - **Response:**
-  - All fields from the request event
-  - Status code
-  - Headers
-  - Response Body
- 
+    - All fields from the request event
+    - Status code
+    - Headers
+    - Response Body
+
 ## Contributing
 
-Contributions are welcome! If you have suggestions for improvements or bug fixes, feel free to open an issue or submit a pull request.
+Contributions are welcome! If you have suggestions for improvements or bug fixes, feel free to open an issue or submit a
+pull request.
 
 To contribute:
 
