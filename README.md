@@ -142,6 +142,7 @@ public class JsonRequestBodyParser implements IRequestBodyParser {
 ```
 
 ```java
+
 @RequiredArgsConstructor
 @Order(1)
 public class JsonResponseBodyParser implements IResponseBodyParser {
@@ -178,6 +179,77 @@ The registry is there so that you can use the built-in parsers or your own custo
 > order with the `@Order` annotation.
 > By default, the library includes request body parsers for JSON, XML, multipart,
 > x-www-form-urlencoded and a fallback parser for plain text.
+
+## Customizing Field Capture: IRequestFieldCaptor and IResponseFieldCaptor
+
+Spring Web Captor gives you fine-grained control over which fields are captured from requests and responses by allowing
+you to implement the `IRequestFieldCaptor` and `IResponseFieldCaptor` interfaces. These interfaces let you add,
+transform, or filter specific fields before they are published in the event.
+
+### Example: Capturing a Custom Request Header
+
+Suppose you want to extract a custom header ("X-Request-Token") from every incoming request and include it in the
+captured event. You can implement `IRequestFieldCaptor` as follows:
+
+```java
+import com.davidrandoll.spring_web_captor.capture.IRequestFieldCaptor;
+import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+
+@Component
+@RequiredArgsConstructor
+@Order(1)
+public class XRequestTokenFieldCaptor implements IRequestFieldCaptor {
+    @Override
+    public void captureFields(HttpServletRequest servletRequest, HttpRequestEvent event) {
+        String token = servletRequest.getHeader("X-Request-Token");
+        if (token != null) {
+            event.addAdditionalData("xRequestToken", token);
+        }
+    }
+}
+```
+
+### Example: Capturing a Custom Response Header
+
+Likewise, you can capture fields from the response by implementing `IResponseFieldCaptor`. For example, to capture an "
+X-Response-Token" header:
+
+```java
+import com.davidrandoll.spring_web_captor.capture.IResponseFieldCaptor;
+import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
+import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletResponse;
+
+@Component
+@RequiredArgsConstructor
+@Order(1)
+public class XResponseTokenFieldCaptor implements IResponseFieldCaptor {
+    @Override
+    public void captureFields(HttpServletResponse servletResponse, HttpRequestEvent reqEvent, HttpResponseEvent resEvent) {
+        String token = servletResponse.getHeader("X-Response-Token");
+        if (token != null) {
+            resEvent.addAdditionalData("xResponseToken", token);
+        }
+    }
+}
+```
+
+**How it works:**
+
+- Implement the appropriate interface and annotate your class with `@Component` (and optionally `@Order`).
+- Use the `captureFields` method to extract, transform, or add any extra information to the event’s `additionalData`
+  map.
+
+> **Tip:** You can implement multiple captors and control their order of execution with the `@Order` annotation.
 
 ## Captured Data
 
