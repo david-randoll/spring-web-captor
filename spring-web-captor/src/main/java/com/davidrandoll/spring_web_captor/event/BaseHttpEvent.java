@@ -77,4 +77,22 @@ public class BaseHttpEvent {
             return MultiValueMap.fromSingleValue(Map.of());
         return this.bodyPayload.getFiles();
     }
+
+    // Custom builder to support addAdditionalData()
+    public static abstract class BaseHttpEventBuilder<C extends BaseHttpEvent, B extends BaseHttpEventBuilder<C, B>> {
+        protected Map<String, Object> additionalData$value = new HashMap<>();
+        private boolean additionalData$set;
+
+        public B additionalData(String key, Object value) {
+            this.additionalData$set = true;
+            this.additionalData$value.put(key, value);
+            return self();
+        }
+
+        public B additionalData(Map<String, Object> values) {
+            this.additionalData$set = true;
+            this.additionalData$value.putAll(values);
+            return self();
+        }
+    }
 }

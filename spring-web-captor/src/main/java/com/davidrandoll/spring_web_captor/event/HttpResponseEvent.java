@@ -1,7 +1,7 @@
 package com.davidrandoll.spring_web_captor.event;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -30,9 +30,8 @@ public class HttpResponseEvent extends BaseHttpEvent {
 
     public void addErrorDetail(@NonNull Map<String, Object> errorDetail) {
         this.errorDetail = errorDetail;
-        var factory = new ObjectMapper().getNodeFactory();
         var message = errorDetail.getOrDefault("message", "").toString();
-        this.responseBody = factory.textNode(message);
+        this.responseBody = JsonNodeFactory.instance.textNode(message);
     }
 
     public boolean isErrorResponse() {
@@ -57,9 +56,8 @@ public class HttpResponseEvent extends BaseHttpEvent {
         public B addErrorDetail(Map<String, Object> errorDetail) {
             if (errorDetail != null) {
                 this.errorDetail(errorDetail);
-                var factory = new ObjectMapper().getNodeFactory();
                 var message = errorDetail.getOrDefault("message", "").toString();
-                this.responseBody(factory.textNode(message));
+                this.responseBody(JsonNodeFactory.instance.textNode(message));
             }
             return self();
         }
