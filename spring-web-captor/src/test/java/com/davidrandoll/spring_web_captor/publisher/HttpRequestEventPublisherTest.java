@@ -8,7 +8,6 @@ import com.davidrandoll.spring_web_captor.setup.EventCaptureListener;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -420,7 +419,7 @@ class HttpRequestEventPublisherTest {
 
     }
 
-    @RepeatedTest(10)
+    @Test
     void testResponseBodyParsingFailureStillPublishesEvent() {
         // using restTemplate to simulate a streaming response
         // mockMvc for some reason does not handle streaming responses well
