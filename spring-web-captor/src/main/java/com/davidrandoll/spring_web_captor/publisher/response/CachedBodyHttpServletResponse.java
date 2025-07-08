@@ -38,9 +38,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
 
         this.responseBodyFuture = new CompletableFuture<>();
 
-        if (this.getContentSize() > 0) {
-            getBody(responseBodyFuture);
-        } else if (request.isAsyncStarted()) {
+        if (request.isAsyncStarted()) {
             request.getAsyncContext().addListener(new AsyncListener() {
                 public void onComplete(AsyncEvent asyncEvent) throws IOException {
                     getBody(responseBodyFuture);
