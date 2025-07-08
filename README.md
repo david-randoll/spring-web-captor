@@ -23,7 +23,13 @@ headers, and request/response body (including files) and publishes an event with
 
 1. **Add to your Spring Boot project:**
 
-   \*comming soon\* (Publish to Maven Central or GitHub Packages and add dependency instructions here.)
+   ```xml
+    <dependency>
+      <groupId>com.davidrandoll</groupId>
+      <artifactId>spring-web-captor</artifactId>
+      <version>0.0.1-beta</version>
+    </dependency>
+   ```
 
 2. **Listen for HTTP events:**
 
