@@ -16,6 +16,23 @@
     <description>A Spring Web library that intercepts and captures HTTP request and response data including URI, path,
         query parameters, headers, and body and publishes structured events for observability, auditing, or automation.
     </description>
+    <url>https://github.com/david-randoll/spring-web-captor</url>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+    <scm>
+        <url>https://github.com/david-randoll/spring-web-captor</url>
+        <connection>scm:git:https://github.com/david-randoll/spring-web-captor.git</connection>
+    </scm>
+    <developers>
+        <developer>
+            <id>david-randoll</id>
+            <name>David Randoll</name>
+        </developer>
+    </developers>
     <modules>
         <module>spring-web-captor</module>
         <module>spring-web-captor-xml</module>
@@ -30,4 +47,51 @@
             <url>https://maven.pkg.github.com/david-randoll/spring-web-captor</url>
         </repository>
     </distributionManagement>
+    <build>
+        <plugins>
+            <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-source-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-javadoc-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.11.2</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-gpg-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.2.8</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
