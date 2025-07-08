@@ -49,8 +49,6 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
             responseWrapper.getResponseBody()
                     .completeExceptionally(ex);
             throw ex;
-        } finally {
-            responseWrapper.copyBodyToResponse(); // IMPORTANT: copy response back into original response
         }
     }
 }

@@ -19,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 import static java.util.Objects.nonNull;
 
 @Slf4j
-public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper {
+public class CachedBodyHttpServletResponse extends TeeHttpServletResponseWrapper {
     @Getter
     private final CachedBodyHttpServletRequest request;
 
@@ -67,8 +67,7 @@ public class CachedBodyHttpServletResponse extends ContentCachingResponseWrapper
     }
 
     private void getBody(CompletableFuture<byte[]> future) throws IOException {
-        future.complete(this.getContentAsByteArray());
-        this.copyBodyToResponse(); // IMPORTANT: copy response back into original response
+        future.complete(this.getCapturedResponseBody());
     }
 
     public HttpStatus getResponseStatus() {
