@@ -27,7 +27,7 @@ jobs:
           server-id: github
           settings-path: ${{ github.workspace }}
 
-      - name: Build and deploy to GitHub Packages
-        run: mvn -B deploy -DskipTests=true -s $GITHUB_WORKSPACE/settings.xml
+      - name: Deploy only modules
+        run: mvn -B deploy -pl spring-web-captor,spring-web-captor-xml -am -DskipTests=true -s $GITHUB_WORKSPACE/settings.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -27,7 +27,7 @@
         <repository>
             <id>github</id>
             <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/david-randoll/spring-web-captor-parent</url>
+            <url>https://maven.pkg.github.com/david-randoll/spring-web-captor</url>
         </repository>
     </distributionManagement>
 </project>
