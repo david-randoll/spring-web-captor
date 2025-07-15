@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>spring-web-captor-xml</artifactId>
+    <name>Spring Web Captor</name>
 
     <properties>
         <spring-web-captor.version>0.0.1-beta</spring-web-captor.version>

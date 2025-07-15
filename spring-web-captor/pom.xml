@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>spring-web-captor</artifactId>
+    <name>Spring Web Captor</name>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
