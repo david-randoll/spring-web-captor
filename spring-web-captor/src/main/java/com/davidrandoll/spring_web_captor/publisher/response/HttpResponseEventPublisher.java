@@ -43,7 +43,11 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
             boolean shouldPublishResponse = publisher.shouldPublishResponseEvent(requestWrapper, responseWrapper);
             if (shouldPublishResponse) {
                 responseWrapper.getResponseBody()
-                        .thenRun(() -> publisher.publishResponseEvent(requestWrapper, responseWrapper));
+                        .thenRun(() -> publisher.publishResponseEvent(requestWrapper, responseWrapper))
+                        .exceptionally(ex -> {
+                            log.error("Failed to publish response event", ex);
+                            return null;
+                        });
             }
         } catch (Exception ex) {
             responseWrapper.getResponseBody()

@@ -82,6 +82,7 @@ public class BaseHttpEvent {
     public static abstract class BaseHttpEventBuilder<C extends BaseHttpEvent, B extends BaseHttpEventBuilder<C, B>> {
         protected Map<String, Object> additionalData$value = new HashMap<>();
         private boolean additionalData$set;
+        protected BodyPayload bodyPayload;
 
         public B additionalData(String key, Object value) {
             this.additionalData$set = true;
@@ -92,6 +93,14 @@ public class BaseHttpEvent {
         public B additionalData(Map<String, Object> values) {
             this.additionalData$set = true;
             this.additionalData$value.putAll(values);
+            return self();
+        }
+
+        public B requestBody(JsonNode body) {
+            if (bodyPayload == null)
+                bodyPayload = new BodyPayload(body);
+            else
+                bodyPayload.setBody(body);
             return self();
         }
     }
