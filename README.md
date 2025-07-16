@@ -27,7 +27,7 @@ headers, and request/response body (including files) and publishes an event with
     <dependency>
         <groupId>com.davidrandoll</groupId>
         <artifactId>spring-web-captor</artifactId>
-        <version>0.0.1-beta</version>
+        <version>0.0.2-beta</version>
     </dependency>
    ```
 
