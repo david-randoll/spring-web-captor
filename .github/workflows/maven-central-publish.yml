@@ -39,6 +39,6 @@ jobs:
 
       - name: Deploy to Maven Central
         run: |
-          mvn --batch-mode clean deploy \
+          mvn --batch-mode clean deploy -Pcentral \
             -Dgpg.keyname="${GPG_KEYNAME}" \
             -Dgpg.passphrase="${GPG_PASSPHRASE}"
