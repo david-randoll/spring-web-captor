@@ -6,10 +6,11 @@
     <parent>
         <groupId>com.davidrandoll</groupId>
         <artifactId>spring-web-captor-parent</artifactId>
-        <version>0.0.1-beta</version>
+        <version>0.0.2-beta</version>
     </parent>
 
     <artifactId>spring-web-captor-xml</artifactId>
+    <name>Spring Web Captor XML</name>
 
     <properties>
         <spring-web-captor.version>0.0.1-beta</spring-web-captor.version>
@@ -34,22 +35,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
             <scope>provided</scope>
         </dependency>
         <dependency>
