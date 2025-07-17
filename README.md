@@ -340,10 +340,6 @@ Please ensure your code follows the existing style and passes any automated chec
 
 Thank you for helping improve this project!
 
-## License
-
-MIT License
-
 ---
 
 **Author:** [david-randoll](https://github.com/david-randoll)
