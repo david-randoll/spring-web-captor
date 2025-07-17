@@ -3,17 +3,13 @@ name: Spring Web Captor CI
 on:
   workflow_dispatch:
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
   push:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    env:
-      GPG_KEYNAME: ${{ secrets.GPG_KEYNAME }}
-      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
     steps:
       - name: Checkout repository
@@ -26,17 +22,8 @@ jobs:
           java-version: '21'
           cache: 'maven'
 
-      - name: Import GPG key
-        run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          # Enable loopback pinentry mode
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          echo "use-agent" >> ~/.gnupg/gpg.conf
-          gpgconf --kill gpg-agent
-          gpgconf --launch gpg-agent
-
-      - name: Build and Sign with Maven
-        run: mvn -B clean verify -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" -Dgpg.keyname="${{ secrets.GPG_KEYNAME }}"
+      - name: Build with Maven
+        run: mvn -B clean verify
 
       - name: Upload JARs
         uses: actions/upload-artifact@v4
