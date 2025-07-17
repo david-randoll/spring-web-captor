@@ -6,11 +6,14 @@
     <parent>
         <groupId>com.davidrandoll</groupId>
         <artifactId>spring-web-captor-parent</artifactId>
-        <version>0.0.3-beta</version>
+        <version>0.0.4-beta</version>
     </parent>
 
     <artifactId>spring-web-captor</artifactId>
     <name>Spring Web Captor</name>
+    <description>The core module of Spring Web Captor that provides the main functionality for capturing HTTP requests
+        and responses.
+    </description>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
