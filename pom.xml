@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.davidrandoll</groupId>
     <artifactId>spring-web-captor-parent</artifactId>
-    <version>0.0.4-beta</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
     <name>Spring Web Captor Parent</name>
     <description>A Spring Web library that intercepts and captures HTTP request and response data including URI, path,

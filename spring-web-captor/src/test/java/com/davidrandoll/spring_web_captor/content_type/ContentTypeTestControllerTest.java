@@ -168,8 +168,8 @@ class ContentTypeTestControllerTest {
     void testMultipleContentTypeHeaders() throws Exception {
         mockMvc.perform(post("/test/content-type/text")
                         .content("some data")
-                        .header(HttpHeaders.CONTENT_TYPE, "application/json")
-                        .header(HttpHeaders.CONTENT_TYPE, "text/plain"))// duplicate header
+                        .header(HttpHeaders.CONTENT_TYPE, "text/plain")
+                        .header(HttpHeaders.CONTENT_TYPE, "application/json"))// duplicate header
                 .andExpect(status().isUnsupportedMediaType()); // likely behavior
 
         HttpRequestEvent req = eventCaptureListener.getRequestEvents().getFirst();
