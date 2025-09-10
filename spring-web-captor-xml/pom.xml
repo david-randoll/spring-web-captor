@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.davidrandoll</groupId>
         <artifactId>spring-web-captor-parent</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1</version>
     </parent>
 
     <artifactId>spring-web-captor-xml</artifactId>
@@ -14,8 +14,6 @@
     <description>An extension for Spring Web Captor that adds XML support for Request/Response bodies.</description>
 
     <properties>
-        <spring-web-captor.version>0.0.1-beta</spring-web-captor.version>
-
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -25,7 +23,7 @@
         <dependency>
             <groupId>com.davidrandoll</groupId>
             <artifactId>spring-web-captor</artifactId>
-            <version>${spring-web-captor.version}</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

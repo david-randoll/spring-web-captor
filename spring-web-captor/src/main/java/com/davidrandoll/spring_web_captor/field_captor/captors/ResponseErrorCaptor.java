@@ -30,7 +30,9 @@ public class ResponseErrorCaptor implements IResponseFieldCaptor {
         try {
             responseWrapper.getResponseBody()
                     .exceptionally(throwable -> {
-                        var ex = new RuntimeException(throwable);
+                        Exception ex = throwable instanceof Exception exception
+                                ? exception
+                                : new RuntimeException(throwable);
                         responseWrapper.resolveException(ex, resolver);
                         Map<String, Object> errorDetails = getErrorDetails(responseWrapper);
                         builder.addErrorDetail(errorDetails);

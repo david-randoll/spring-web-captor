@@ -22,6 +22,8 @@ import com.davidrandoll.spring_web_captor.publisher.response.RuntimeExceptionRes
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.web.ErrorProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -115,11 +117,18 @@ public class AppConfig {
         return new HttpRequestEventPublisher(publisher);
     }
 
+    @Bean
+    @ConditionalOnMissingBean
+    @ConfigurationProperties(prefix = "server.error")
+    public ErrorProperties errorProperties() {
+        return new ErrorProperties();
+    }
+
     @Bean("runtimeExceptionResolver")
     @ConditionalOnMissingBean(name = "runtimeExceptionResolver", ignored = RuntimeExceptionResolver.class)
     @Conditional(IsWebCaptorEnabled.class)
-    public RuntimeExceptionResolver runtimeExceptionResolver(ObjectMapper mapper) {
-        return new RuntimeExceptionResolver(mapper);
+    public RuntimeExceptionResolver runtimeExceptionResolver(ObjectMapper mapper, ErrorProperties properties) {
+        return new RuntimeExceptionResolver(mapper, properties);
     }
 
     @Bean("excludedPathPublishCondition")
