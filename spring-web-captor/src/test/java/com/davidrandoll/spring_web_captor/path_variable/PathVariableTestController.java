@@ -29,4 +29,19 @@ public class PathVariableTestController {
     public ResponseEntity<String> optional(@PathVariable(required = false) String maybeId) {
         return ResponseEntity.ok("Maybe ID: " + maybeId);
     }
+
+    @GetMapping(value = {"{key}", "{key}/**"})
+    public ResponseEntity<String> infinitePathVariables(@PathVariable(required = false) String key) {
+        return ResponseEntity.ok("Key: " + key);
+    }
+
+    @GetMapping(value = {"/with-end/{key}/{*rest}"})
+    public ResponseEntity<String> infinitePathVariablesWithEnd(@PathVariable String key, @PathVariable String rest) {
+        return ResponseEntity.ok("Key: " + key);
+    }
+
+    @GetMapping(value = {"/with-middle/{key}/{*rest}"})
+    public ResponseEntity<String> infinitePathVariablesWithMiddleAndPathAgain(@PathVariable String key, @PathVariable String rest) {
+        return ResponseEntity.ok("Key: " + key);
+    }
 }
