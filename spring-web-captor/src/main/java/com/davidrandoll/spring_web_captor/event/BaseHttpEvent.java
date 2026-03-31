@@ -2,6 +2,7 @@ package com.davidrandoll.spring_web_captor.event;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import lombok.AllArgsConstructor;
@@ -71,6 +72,7 @@ public class BaseHttpEvent {
         return this.bodyPayload.getBody();
     }
 
+    @JsonIgnore
     @NonNull
     public MultiValueMap<String, MultipartFile> getRequestFiles() {
         if (isNull(this.bodyPayload) || isNull(this.bodyPayload.getFiles()))
