@@ -122,7 +122,7 @@ export default function JsonViewer({ data, label }: { data: unknown; label?: str
   return (
     <div className="relative">
       {label && <div className="text-xs text-slate-500 mb-1 font-medium uppercase tracking-wide">{label}</div>}
-      <div className="bg-slate-950 rounded-lg p-3 font-mono text-sm overflow-auto max-h-96 border border-slate-800">
+      <div className="bg-slate-950 rounded-lg p-2 sm:p-3 font-mono text-xs sm:text-sm overflow-auto max-h-72 sm:max-h-96 border border-slate-800">
         <button
           onClick={handleCopy}
           className="absolute top-2 right-2 p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
