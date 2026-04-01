@@ -7,7 +7,7 @@ import JsonViewer from './JsonViewer';
 import {
   Clock, Globe, Monitor, MapPin, FileText, AlertTriangle,
   Server, ArrowDown, Layers, Search, GitBranch, Upload,
-  RotateCcw, Sparkles,
+  RotateCcw, Sparkles, Puzzle,
 } from 'lucide-react';
 
 function parseDuration(d: unknown): string {
@@ -124,7 +124,7 @@ export default function CapturedResult({ event, demo, onTryAnother }: Props) {
         <div className="space-y-5">
           {/* Summary cards */}
           <FadeInSection delay={nextDelay()}>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
                 <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Method</div>
                 <MethodBadge method={event.method} />
@@ -132,12 +132,6 @@ export default function CapturedResult({ event, demo, onTryAnother }: Props) {
               <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
                 <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Status</div>
                 <StatusBadge status={event.responseStatus} />
-              </div>
-              <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
-                <div className="flex items-center gap-1 text-[10px] text-slate-500 uppercase tracking-wider mb-2">
-                  <Clock className="w-3 h-3" /> Duration
-                </div>
-                <span className="font-mono text-sm text-slate-200 font-medium">{parseDuration(event.duration)}</span>
               </div>
               <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
                 <div className="flex items-center gap-1 text-[10px] text-slate-500 uppercase tracking-wider mb-2">
@@ -160,26 +154,69 @@ export default function CapturedResult({ event, demo, onTryAnother }: Props) {
             </div>
           </FadeInSection>
 
-          {/* Metadata */}
-          {(event.userIp || event.userAgent) && (
-            <FadeInSection delay={nextDelay()}>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                {event.userIp && (
-                  <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
-                    <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">Client IP</div>
-                    <span className="font-mono text-sm text-slate-200">{event.userIp}</span>
-                  </div>
-                )}
-                {event.userAgent && (
-                  <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
-                    <div className="flex items-center gap-1 text-[10px] text-slate-500 uppercase tracking-wider mb-2">
-                      <Monitor className="w-3 h-3" /> User Agent
+          {/* === EXTENSIONS === */}
+          {(event.duration || event.userIp || event.userAgent) && (
+            <>
+              <FadeInSection delay={nextDelay()}>
+                <div className="flex items-center gap-3 pt-3">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent to-violet-500/20" />
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-violet-400 uppercase tracking-wider">
+                    <Puzzle className="w-3.5 h-3.5" /> Built-in Extensions
+                  </span>
+                  <div className="h-px flex-1 bg-gradient-to-l from-transparent to-violet-500/20" />
+                </div>
+                <p className="text-[11px] text-slate-600 text-center mt-1">
+                  Extensions enrich events with additional data via the <span className="text-violet-400/70 font-mono">IHttpEventExtension</span> interface. These are built-in — you can add your own.
+                </p>
+              </FadeInSection>
+
+              <FadeInSection delay={nextDelay()}>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                  {event.duration && (
+                    <div className="bg-slate-900 rounded-xl p-4 border border-violet-500/20">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1 text-[10px] text-violet-400 uppercase tracking-wider font-semibold">
+                          <Clock className="w-3 h-3" /> Duration
+                        </div>
+                        <span className="text-[9px] bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded-full px-1.5 py-0.5 font-medium">
+                          Extension
+                        </span>
+                      </div>
+                      <span className="font-mono text-sm text-slate-200 font-medium">{parseDuration(event.duration)}</span>
+                      {event.startTime && event.endTime && (
+                        <div className="text-[10px] text-slate-600 font-mono mt-1">
+                          {event.startTime} → {event.endTime}
+                        </div>
+                      )}
                     </div>
-                    <span className="font-mono text-xs text-slate-300 break-all">{event.userAgent}</span>
-                  </div>
-                )}
-              </div>
-            </FadeInSection>
+                  )}
+                  {event.userIp && (
+                    <div className="bg-slate-900 rounded-xl p-4 border border-violet-500/20">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="text-[10px] text-violet-400 uppercase tracking-wider font-semibold">Client IP</div>
+                        <span className="text-[9px] bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded-full px-1.5 py-0.5 font-medium">
+                          Extension
+                        </span>
+                      </div>
+                      <span className="font-mono text-sm text-slate-200">{event.userIp}</span>
+                    </div>
+                  )}
+                  {event.userAgent && (
+                    <div className="bg-slate-900 rounded-xl p-4 border border-violet-500/20">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1 text-[10px] text-violet-400 uppercase tracking-wider font-semibold">
+                          <Monitor className="w-3 h-3" /> User Agent
+                        </div>
+                        <span className="text-[9px] bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded-full px-1.5 py-0.5 font-medium">
+                          Extension
+                        </span>
+                      </div>
+                      <span className="font-mono text-xs text-slate-300 break-all">{event.userAgent}</span>
+                    </div>
+                  )}
+                </div>
+              </FadeInSection>
+            </>
           )}
 
           {/* === REQUEST CAPTURE === */}
