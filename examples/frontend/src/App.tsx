@@ -1,61 +1,94 @@
-import { useState } from 'react';
-import { useCapturedEvents } from './hooks/useCapturedEvents';
-import CapturedEventsPanel from './components/CapturedEventsPanel';
-import DemoScenarios from './components/DemoScenarios';
-import { Radio, Trash2 } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import type { HttpResponseEvent } from './types/events';
+import { fetchCapturedEvents, clearCapturedEvents } from './api/client';
+import DemoSelector from './components/DemoSelector';
+import RequestPreview from './components/RequestPreview';
+import CaptureAnimation from './components/CaptureAnimation';
+import CapturedResult from './components/CapturedResult';
+import { Radio } from 'lucide-react';
+import type { DemoScenario } from './components/demoData';
+import { DEMOS } from './components/demoData';
+
+type Phase = 'idle' | 'previewing' | 'sending' | 'captured';
 
 export default function App() {
-  const { events, clear } = useCapturedEvents();
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedDemo, setSelectedDemo] = useState<DemoScenario>(DEMOS[0]);
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [capturedEvent, setCapturedEvent] = useState<HttpResponseEvent | null>(null);
 
-  const handleClear = () => {
-    clear();
-    setSelectedIndex(null);
+  const handleSelectDemo = (demo: DemoScenario) => {
+    setSelectedDemo(demo);
+    setPhase('previewing');
+    setCapturedEvent(null);
+  };
+
+  const handleSend = useCallback(async () => {
+    setPhase('sending');
+    setCapturedEvent(null);
+    await clearCapturedEvents();
+
+    // Small delay so the clear takes effect
+    await new Promise((r) => setTimeout(r, 200));
+
+    // Execute the request
+    await selectedDemo.run().catch(() => {});
+
+    // Wait a beat for the backend to publish the event
+    await new Promise((r) => setTimeout(r, 600));
+
+    // Fetch the captured event
+    const data = await fetchCapturedEvents();
+    const events: HttpResponseEvent[] = data.responseEvents || [];
+    if (events.length > 0) {
+      setCapturedEvent(events[events.length - 1]);
+    }
+    setPhase('captured');
+  }, [selectedDemo]);
+
+  const handleReset = () => {
+    setPhase('previewing');
+    setCapturedEvent(null);
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[#0a0a0f] text-slate-200">
+    <div className="min-h-screen bg-[#0a0a0f] text-slate-200">
       {/* Header */}
-      <header className="h-14 border-b border-slate-800 flex items-center justify-between px-6 shrink-0">
-        <div className="flex items-center gap-3">
+      <header className="border-b border-slate-800">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-3">
           <Radio className="w-5 h-5 text-blue-400" />
           <h1 className="text-base font-bold tracking-tight">Spring Web Captor</h1>
           <span className="text-[11px] bg-blue-500/15 text-blue-400 border border-blue-500/30 rounded-full px-2 py-0.5 font-medium">
             Interactive Demo
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          {events.length > 0 && (
-            <>
-              <span className="text-xs text-slate-500">
-                {events.length} event{events.length !== 1 ? 's' : ''} captured
-              </span>
-              <button
-                onClick={handleClear}
-                className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-red-400 transition-colors px-2 py-1 rounded hover:bg-slate-800"
-              >
-                <Trash2 className="w-3 h-3" /> Clear
-              </button>
-            </>
-          )}
-        </div>
       </header>
 
-      {/* Main layout */}
-      <div className="flex flex-1 min-h-0">
-        {/* Left: demo scenarios */}
-        <div className="w-[340px] shrink-0 border-r border-slate-800 overflow-y-auto">
-          <DemoScenarios onRun={() => setSelectedIndex(null)} />
+      {/* Demo selector */}
+      <div className="border-b border-slate-800 bg-slate-950/50">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <DemoSelector demos={DEMOS} selected={selectedDemo} onSelect={handleSelectDemo} />
         </div>
+      </div>
 
-        {/* Right: captured events — the star of the show */}
-        <div className="flex-1 flex flex-col min-w-0">
-          <CapturedEventsPanel
-            events={events}
-            selectedIndex={selectedIndex}
-            onSelect={setSelectedIndex}
-          />
-        </div>
+      {/* Main content */}
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {phase === 'idle' && (
+          <div className="text-center py-20">
+            <p className="text-slate-500 text-lg">Select a demo above to see the library in action</p>
+          </div>
+        )}
+
+        {phase === 'previewing' && (
+          <RequestPreview demo={selectedDemo} onSend={handleSend} />
+        )}
+
+        {phase === 'sending' && (
+          <CaptureAnimation demo={selectedDemo} />
+        )}
+
+        {phase === 'captured' && capturedEvent && (
+          <CapturedResult event={capturedEvent} demo={selectedDemo} onTryAnother={handleReset} />
+        )}
       </div>
     </div>
   );
