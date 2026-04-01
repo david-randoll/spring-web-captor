@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -116,6 +117,36 @@ class ErrorTestControllerTest {
                 .andExpect(status().isMethodNotAllowed());
 
         assertErrorCaptured("Request method 'POST' is not supported", 405);
+    }
+
+    @Test
+    void testErrorDetailStatusMatchesResponseStatus() throws Exception {
+        mockMvc.perform(get("/test/error/runtime"))
+                .andExpect(status().isInternalServerError());
+
+        HttpResponseEvent event = eventCaptureListener.getResponseEvents().getFirst();
+        assertEquals(500, event.getErrorDetail().get("status"),
+                "errorDetail.status should match the actual HTTP status, not default to 999");
+    }
+
+    @Test
+    void testErrorDetailStatusMatchesFor404() throws Exception {
+        mockMvc.perform(get("/test/error/notfound"))
+                .andExpect(status().isNotFound());
+
+        HttpResponseEvent event = eventCaptureListener.getResponseEvents().getFirst();
+        assertEquals(404, event.getErrorDetail().get("status"),
+                "errorDetail.status should be 404 for not found errors");
+    }
+
+    @Test
+    void testErrorDetailStatusMatchesFor418() throws Exception {
+        mockMvc.perform(get("/test/error/custom"))
+                .andExpect(status().isIAmATeapot());
+
+        HttpResponseEvent event = eventCaptureListener.getResponseEvents().getFirst();
+        assertEquals(418, event.getErrorDetail().get("status"),
+                "errorDetail.status should be 418 for teapot errors");
     }
 
     private void assertErrorCaptured(String expectedMessageFragment, int expectedStatus) throws JsonProcessingException {
