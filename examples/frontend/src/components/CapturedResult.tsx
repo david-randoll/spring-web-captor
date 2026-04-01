@@ -7,7 +7,7 @@ import JsonViewer from './JsonViewer';
 import {
   Clock, Globe, Monitor, MapPin, FileText, AlertTriangle,
   Server, ArrowDown, Layers, Search, GitBranch, Upload,
-  RotateCcw, Sparkles, Puzzle,
+  RotateCcw, Sparkles, Puzzle, Info,
 } from 'lucide-react';
 
 function parseDuration(d: unknown): string {
@@ -66,6 +66,95 @@ function SectionHeader({ title, icon, accent }: { title: string; icon: React.Rea
     <h3 className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wider mb-2 ${accent || 'text-slate-500'}`}>
       {icon} {title}
     </h3>
+  );
+}
+
+function ExtensionInfoPanel() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mt-3">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 text-[11px] text-violet-400/80 hover:text-violet-300 transition-colors mx-auto"
+      >
+        <Info className="w-3 h-3" />
+        {open ? 'Hide' : 'How to create your own extensions'}
+      </button>
+      {open && (
+        <div className="mt-3 bg-slate-900/80 border border-violet-500/15 rounded-xl p-5 text-xs text-slate-400 leading-relaxed space-y-4">
+          <p>
+            Extensions implement <span className="font-mono text-violet-400">IHttpEventExtension</span> and
+            are automatically picked up as Spring beans. They add custom key-value pairs to every captured event's
+            {' '}<span className="font-mono text-violet-400">additionalData</span> map.
+          </p>
+          <p className="text-slate-500">
+            For example, you could capture the current tenant, the authenticated user's roles,
+            security context details, or any request-scoped data your application needs for auditing:
+          </p>
+          <div className="bg-slate-950 rounded-lg p-4 font-mono text-[11px] border border-slate-800 overflow-x-auto whitespace-pre text-slate-300">
+{`@Component
+public class SecurityContextExtension implements IHttpEventExtension {
+
+    @Override
+    public Map<String, Object> enrichRequestEvent(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            HttpRequestEvent event) {
+
+        Authentication auth = SecurityContextHolder.getContext()
+                .getAuthentication();
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("tenantId", TenantContext.getCurrentTenant());
+        data.put("username", auth.getName());
+        data.put("roles", auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList());
+        return data;
+    }
+}`}
+          </div>
+          <p className="text-slate-500">
+            Other ideas for custom extensions:
+          </p>
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-slate-500">
+            <li className="flex items-start gap-1.5">
+              <span className="text-violet-500 mt-0.5">-</span>
+              <span><span className="text-slate-400">Tenant ID</span> — multi-tenant isolation</span>
+            </li>
+            <li className="flex items-start gap-1.5">
+              <span className="text-violet-500 mt-0.5">-</span>
+              <span><span className="text-slate-400">User roles</span> — RBAC auditing</span>
+            </li>
+            <li className="flex items-start gap-1.5">
+              <span className="text-violet-500 mt-0.5">-</span>
+              <span><span className="text-slate-400">Correlation ID</span> — distributed tracing</span>
+            </li>
+            <li className="flex items-start gap-1.5">
+              <span className="text-violet-500 mt-0.5">-</span>
+              <span><span className="text-slate-400">Session ID</span> — session tracking</span>
+            </li>
+            <li className="flex items-start gap-1.5">
+              <span className="text-violet-500 mt-0.5">-</span>
+              <span><span className="text-slate-400">Feature flags</span> — A/B test context</span>
+            </li>
+            <li className="flex items-start gap-1.5">
+              <span className="text-violet-500 mt-0.5">-</span>
+              <span><span className="text-slate-400">Geo-location</span> — IP-based region</span>
+            </li>
+            <li className="flex items-start gap-1.5">
+              <span className="text-violet-500 mt-0.5">-</span>
+              <span><span className="text-slate-400">API key / client</span> — consumer tracking</span>
+            </li>
+            <li className="flex items-start gap-1.5">
+              <span className="text-violet-500 mt-0.5">-</span>
+              <span><span className="text-slate-400">Security context</span> — full auth details</span>
+            </li>
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -168,6 +257,7 @@ export default function CapturedResult({ event, demo, onTryAnother }: Props) {
                 <p className="text-[11px] text-slate-600 text-center mt-1">
                   Extensions enrich events with additional data via the <span className="text-violet-400/70 font-mono">IHttpEventExtension</span> interface. These are built-in — you can add your own.
                 </p>
+                <ExtensionInfoPanel />
               </FadeInSection>
 
               <FadeInSection delay={nextDelay()}>
