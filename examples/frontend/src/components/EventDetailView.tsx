@@ -3,39 +3,35 @@ import type { HttpResponseEvent } from '../types/events';
 import MethodBadge from './MethodBadge';
 import StatusBadge from './StatusBadge';
 import JsonViewer from './JsonViewer';
-import { Clock, Globe, Monitor, MapPin, FileText, AlertTriangle, ArrowLeft } from 'lucide-react';
-
-type Tab = 'overview' | 'request' | 'response' | 'raw';
+import { Clock, Globe, Monitor, MapPin, FileText, AlertTriangle, ArrowLeft, Layers, Server, ArrowDown, Search, GitBranch, Upload } from 'lucide-react';
 
 function parseDuration(d: unknown): string {
   if (!d) return '-';
   const s = String(d);
-  // ISO-8601 duration: PT0.123S or PT3.045S
-  const match = s.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:([\d.]+)S)?/);
+  const match = /PT(?:(\d+)H)?(?:(\d+)M)?(?:([\d.]+)S)?/.exec(s);
   if (match) {
-    const h = parseInt(match[1] || '0');
-    const m = parseInt(match[2] || '0');
-    const sec = parseFloat(match[3] || '0');
+    const h = Number.parseInt(match[1] || '0');
+    const m = Number.parseInt(match[2] || '0');
+    const sec = Number.parseFloat(match[3] || '0');
     const totalMs = (h * 3600 + m * 60 + sec) * 1000;
     if (totalMs < 1000) return `${Math.round(totalMs)}ms`;
     return `${(totalMs / 1000).toFixed(2)}s`;
   }
-  // Might be a number in nanos or millis
   if (typeof d === 'number') return `${d}ms`;
   return s;
 }
 
 function DataTable({ data, emptyMsg }: { data: Record<string, unknown> | null | undefined; emptyMsg?: string }) {
   if (!data || Object.keys(data).length === 0) {
-    return <div className="text-sm text-slate-500 italic">{emptyMsg || 'None'}</div>;
+    return <div className="text-xs text-slate-600 italic">{emptyMsg || 'None captured'}</div>;
   }
   return (
     <div className="border border-slate-800 rounded-lg overflow-hidden">
-      <table className="w-full text-sm">
+      <table className="w-full text-xs">
         <tbody>
           {Object.entries(data).map(([key, val]) => (
-            <tr key={key} className="border-b border-slate-800 last:border-0">
-              <td className="px-3 py-1.5 font-mono text-sky-400 bg-slate-900/50 w-1/3 whitespace-nowrap">{key}</td>
+            <tr key={key} className="border-b border-slate-800/50 last:border-0">
+              <td className="px-3 py-1.5 font-mono text-sky-400 bg-slate-900/50 w-1/3 whitespace-nowrap align-top">{key}</td>
               <td className="px-3 py-1.5 font-mono text-slate-300 break-all">
                 {Array.isArray(val) ? val.join(', ') : String(val ?? '')}
               </td>
@@ -47,136 +43,162 @@ function DataTable({ data, emptyMsg }: { data: Record<string, unknown> | null | 
   );
 }
 
+function Section({ title, icon, children, accent }: { title: string; icon: React.ReactNode; children: React.ReactNode; accent?: string }) {
+  return (
+    <div className="space-y-2">
+      <h3 className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-wider ${accent || 'text-slate-500'}`}>
+        {icon} {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
+
 export default function EventDetailView({ event, onBack }: { event: HttpResponseEvent; onBack: () => void }) {
-  const [tab, setTab] = useState<Tab>('overview');
-
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'overview', label: 'Overview' },
-    { key: 'request', label: 'Request' },
-    { key: 'response', label: 'Response' },
-    { key: 'raw', label: 'Raw JSON' },
-  ];
-
+  const [tab, setTab] = useState<'visual' | 'raw'>('visual');
   const statusCode = event.responseStatus;
   const hasFiles = event.bodyPayload?.files && Object.keys(event.bodyPayload.files).length > 0;
+  const hasError = event.errorDetail && Object.keys(event.errorDetail).length > 0;
+  const hasQueryParams = event.queryParams && Object.keys(event.queryParams).length > 0;
+  const hasPathParams = event.pathParams && Object.keys(event.pathParams).length > 0;
+  const hasRequestBody = event.bodyPayload?.body != null;
+  const hasResponseBody = event.responseBody != null;
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-slate-800 flex items-center gap-3">
-        <button onClick={onBack} className="p-1 hover:bg-slate-800 rounded transition-colors">
+      <div className="px-5 py-3 border-b border-slate-800 flex items-center gap-3 shrink-0">
+        <button onClick={onBack} className="p-1.5 hover:bg-slate-800 rounded-lg transition-colors">
           <ArrowLeft className="w-4 h-4 text-slate-400" />
         </button>
         <MethodBadge method={event.method} />
-        <span className="font-mono text-sm text-slate-300 truncate">{event.path}</span>
+        <span className="font-mono text-sm text-slate-300 truncate flex-1">{event.path}</span>
         <StatusBadge status={statusCode} />
-      </div>
-
-      {/* Tabs */}
-      <div className="flex border-b border-slate-800 px-4">
-        {tabs.map((t) => (
+        <div className="flex gap-1">
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
-              tab === t.key
-                ? 'border-blue-500 text-blue-400'
-                : 'border-transparent text-slate-500 hover:text-slate-300'
-            }`}
+            onClick={() => setTab('visual')}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${tab === 'visual' ? 'bg-slate-800 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}
           >
-            {t.label}
+            Visual
           </button>
-        ))}
+          <button
+            onClick={() => setTab('raw')}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${tab === 'raw' ? 'bg-slate-800 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            Raw JSON
+          </button>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4 space-y-4">
-        {tab === 'overview' && (
-          <>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-                <div className="text-xs text-slate-500 uppercase tracking-wide mb-1">Method</div>
+      <div className="flex-1 overflow-auto">
+        {tab === 'raw' ? (
+          <div className="p-5">
+            <JsonViewer data={event} label="Full Captured Event" />
+          </div>
+        ) : (
+          <div className="p-5 space-y-6">
+            {/* Summary cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="bg-slate-900 rounded-xl p-3 border border-slate-800">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Method</div>
                 <MethodBadge method={event.method} />
               </div>
-              <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-                <div className="text-xs text-slate-500 uppercase tracking-wide mb-1">Status</div>
+              <div className="bg-slate-900 rounded-xl p-3 border border-slate-800">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Status</div>
                 <StatusBadge status={statusCode} />
               </div>
-              <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 uppercase tracking-wide mb-1">
+              <div className="bg-slate-900 rounded-xl p-3 border border-slate-800">
+                <div className="flex items-center gap-1 text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">
                   <Clock className="w-3 h-3" /> Duration
                 </div>
-                <span className="font-mono text-sm text-slate-200">{parseDuration(event.duration)}</span>
+                <span className="font-mono text-sm text-slate-200 font-medium">{parseDuration(event.duration)}</span>
               </div>
-              <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 uppercase tracking-wide mb-1">
+              <div className="bg-slate-900 rounded-xl p-3 border border-slate-800">
+                <div className="flex items-center gap-1 text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">
                   <MapPin className="w-3 h-3" /> Endpoint Exists
                 </div>
-                <span className={`font-mono text-sm ${event.endpointExists ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className={`font-mono text-sm font-medium ${event.endpointExists ? 'text-emerald-400' : 'text-red-400'}`}>
                   {String(event.endpointExists)}
                 </span>
               </div>
             </div>
 
-            <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 uppercase tracking-wide mb-1">
-                <Globe className="w-3 h-3" /> Full URL
+            {/* Full URL */}
+            <div className="bg-slate-900 rounded-xl p-3 border border-slate-800">
+              <div className="flex items-center gap-1.5 text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">
+                <Globe className="w-3 h-3" /> Captured URL
               </div>
               <span className="font-mono text-sm text-slate-200 break-all">{event.fullUrl}</span>
             </div>
 
-            {event.userIp && (
-              <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-                <div className="text-xs text-slate-500 uppercase tracking-wide mb-1">Client IP</div>
-                <span className="font-mono text-sm text-slate-200">{event.userIp}</span>
+            {/* Metadata row */}
+            {(event.userIp || event.userAgent) && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                {event.userIp && (
+                  <div className="bg-slate-900 rounded-xl p-3 border border-slate-800">
+                    <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Client IP</div>
+                    <span className="font-mono text-sm text-slate-200">{event.userIp}</span>
+                  </div>
+                )}
+                {event.userAgent && (
+                  <div className="bg-slate-900 rounded-xl p-3 border border-slate-800">
+                    <div className="flex items-center gap-1 text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">
+                      <Monitor className="w-3 h-3" /> User Agent
+                    </div>
+                    <span className="font-mono text-xs text-slate-300 break-all">{event.userAgent}</span>
+                  </div>
+                )}
               </div>
             )}
 
-            {event.userAgent && (
-              <div className="bg-slate-900 rounded-lg p-3 border border-slate-800">
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 uppercase tracking-wide mb-1">
-                  <Monitor className="w-3 h-3" /> User Agent
-                </div>
-                <span className="font-mono text-xs text-slate-300 break-all">{event.userAgent}</span>
-              </div>
-            )}
-          </>
-        )}
+            {/* Divider: Request section */}
+            <div className="flex items-center gap-3 pt-2">
+              <div className="h-px flex-1 bg-slate-800" />
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-blue-400 uppercase tracking-wider">
+                <Layers className="w-3.5 h-3.5" /> Request Capture
+              </span>
+              <div className="h-px flex-1 bg-slate-800" />
+            </div>
 
-        {tab === 'request' && (
-          <>
-            <div>
-              <h4 className="text-sm font-medium text-slate-300 mb-2">Headers</h4>
+            {/* Request headers */}
+            <Section title="Headers" icon={<Server className="w-3.5 h-3.5" />}>
               <DataTable data={event.headers} emptyMsg="No headers captured" />
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-slate-300 mb-2">Query Parameters</h4>
-              <DataTable data={event.queryParams} emptyMsg="No query parameters" />
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-slate-300 mb-2">Path Parameters</h4>
-              <DataTable data={event.pathParams} emptyMsg="No path parameters" />
-            </div>
-            {event.bodyPayload?.body != null && (
-              <div>
-                <h4 className="text-sm font-medium text-slate-300 mb-2">Request Body</h4>
-                <JsonViewer data={event.bodyPayload.body} />
-              </div>
+            </Section>
+
+            {/* Query params */}
+            {hasQueryParams && (
+              <Section title="Query Parameters" icon={<Search className="w-3.5 h-3.5" />}>
+                <DataTable data={event.queryParams} />
+              </Section>
             )}
+
+            {/* Path params */}
+            {hasPathParams && (
+              <Section title="Path Parameters" icon={<GitBranch className="w-3.5 h-3.5" />}>
+                <DataTable data={event.pathParams} />
+              </Section>
+            )}
+
+            {/* Request body */}
+            {hasRequestBody && (
+              <Section title="Request Body" icon={<FileText className="w-3.5 h-3.5" />}>
+                <JsonViewer data={event.bodyPayload!.body} />
+              </Section>
+            )}
+
+            {/* Uploaded files */}
             {hasFiles && (
-              <div>
-                <h4 className="flex items-center gap-1.5 text-sm font-medium text-slate-300 mb-2">
-                  <FileText className="w-4 h-4" /> Uploaded Files
-                </h4>
+              <Section title="Uploaded Files" icon={<Upload className="w-3.5 h-3.5" />}>
                 {Object.entries(event.bodyPayload!.files).map(([field, files]) =>
                   files.map((f, i) => (
-                    <div key={`${field}-${i}`} className="bg-slate-900 border border-slate-800 rounded-lg p-3 mb-2">
+                    <div key={`${field}-${i}`} className="bg-slate-900 border border-slate-800 rounded-xl p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-mono text-sm text-sky-400">{f.filename}</span>
+                        <span className="font-mono text-sm text-sky-400 font-medium">{f.filename}</span>
                         <span className="text-xs text-slate-500">{(f.size / 1024).toFixed(1)} KB</span>
                       </div>
                       <div className="text-xs text-slate-500">
-                        Field: {field} | Type: {f.contentType}
+                        Field: <span className="text-slate-400">{field}</span> | Type: <span className="text-slate-400">{f.contentType}</span>
                       </div>
                       {f.contentType?.startsWith('image/') && f.base64Content && (
                         <img
@@ -188,41 +210,46 @@ export default function EventDetailView({ event, onBack }: { event: HttpResponse
                     </div>
                   ))
                 )}
-              </div>
+              </Section>
             )}
-          </>
-        )}
 
-        {tab === 'response' && (
-          <>
-            <div className="flex items-center gap-3 mb-2">
+            {/* Divider: Response section */}
+            <div className="flex items-center gap-3 pt-2">
+              <div className="h-px flex-1 bg-slate-800" />
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                <ArrowDown className="w-3.5 h-3.5" /> Response Capture
+              </span>
+              <div className="h-px flex-1 bg-slate-800" />
+            </div>
+
+            {/* Response status */}
+            <div className="bg-slate-900 rounded-xl p-3 border border-slate-800">
+              <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Response Status</div>
               <StatusBadge status={statusCode} />
             </div>
-            <div>
-              <h4 className="text-sm font-medium text-slate-300 mb-2">Response Headers</h4>
-              <DataTable data={event.responseHeaders} emptyMsg="No response headers" />
-            </div>
-            {event.errorDetail && (
-              <div>
-                <h4 className="flex items-center gap-1.5 text-sm font-medium text-red-400 mb-2">
-                  <AlertTriangle className="w-4 h-4" /> Error Detail
-                </h4>
-                <JsonViewer data={event.errorDetail} />
-              </div>
-            )}
-            {event.responseBody != null && (
-              <div>
-                <h4 className="text-sm font-medium text-slate-300 mb-2">Response Body</h4>
-                <JsonViewer data={event.responseBody} />
-              </div>
-            )}
-          </>
-        )}
 
-        {tab === 'raw' && (
-          <JsonViewer data={event} label="Full Captured Event" />
+            {/* Response headers */}
+            <Section title="Response Headers" icon={<Server className="w-3.5 h-3.5" />}>
+              <DataTable data={event.responseHeaders} emptyMsg="No response headers captured" />
+            </Section>
+
+            {/* Error detail */}
+            {hasError && (
+              <Section title="Error Detail" icon={<AlertTriangle className="w-3.5 h-3.5" />} accent="text-red-400">
+                <JsonViewer data={event.errorDetail} />
+              </Section>
+            )}
+
+            {/* Response body */}
+            {hasResponseBody && (
+              <Section title="Response Body" icon={<FileText className="w-3.5 h-3.5" />} accent="text-emerald-400">
+                <JsonViewer data={event.responseBody} />
+              </Section>
+            )}
+          </div>
         )}
       </div>
     </div>
   );
 }
+
