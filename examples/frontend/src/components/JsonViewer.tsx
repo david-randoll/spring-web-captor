@@ -1,6 +1,38 @@
 import { useState } from 'react';
 import { ChevronRight, ChevronDown, Copy, Check } from 'lucide-react';
 
+function StringValue({ value }: { value: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const truncateAt = 200;
+
+  if (value.length <= truncateAt) {
+    return <span className="json-string">"{value}"</span>;
+  }
+
+  return (
+    <span className="json-string">
+      "{expanded ? value : value.slice(0, truncateAt)}
+      {!expanded && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="inline ml-1 text-blue-400 hover:text-blue-300 text-xs underline underline-offset-2 cursor-pointer"
+        >
+          ...show more
+        </button>
+      )}
+      {expanded && (
+        <button
+          onClick={() => setExpanded(false)}
+          className="inline ml-1 text-blue-400 hover:text-blue-300 text-xs underline underline-offset-2 cursor-pointer"
+        >
+          show less
+        </button>
+      )}
+      "
+    </span>
+  );
+}
+
 function JsonValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
   const [collapsed, setCollapsed] = useState(depth > 2);
 
@@ -17,10 +49,7 @@ function JsonValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
   }
 
   if (typeof value === 'string') {
-    if (value.length > 200) {
-      return <span className="json-string">"{value.slice(0, 200)}..."</span>;
-    }
-    return <span className="json-string">"{value}"</span>;
+    return <StringValue value={value} />;
   }
 
   if (Array.isArray(value)) {
