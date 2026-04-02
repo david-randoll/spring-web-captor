@@ -38,7 +38,7 @@ export default function RequestPreview({ demo, onSend }: Props) {
           <div className="flex items-start gap-2">
             <MethodBadge method={demo.method} />
             <div className="text-slate-300 break-all min-w-0">
-              <span className="text-slate-500 hidden sm:inline">localhost:11006</span>
+              <span className="text-slate-500 hidden sm:inline">{new URL(import.meta.env.VITE_BACKEND_URL || 'http://localhost:11006').host}</span>
               <span className="text-slate-200">{path}</span>
               {queryString && (
                 <span className="text-amber-400/70">?{queryString}</span>

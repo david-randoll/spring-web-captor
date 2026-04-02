@@ -5,8 +5,11 @@ services:
       - "11006:11006"
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_BACKEND_URL: http://localhost:11006
     ports:
-      - "3000:3000"
+      - "11007:11007"
     depends_on:
       - backend

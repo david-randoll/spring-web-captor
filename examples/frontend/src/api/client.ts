@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:11006';
+const BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:11006';
 
 export async function sendRequest(
   method: string,
