@@ -164,7 +164,7 @@ interface Props {
   onTryAnother: () => void;
 }
 
-export default function CapturedResult({ event, demo, onTryAnother }: Props) {
+export default function CapturedResult({ event, onTryAnother }: Props) {
   const [tab, setTab] = useState<'visual' | 'raw'>('visual');
   const hasFiles = event.bodyPayload?.files && Object.keys(event.bodyPayload.files).length > 0;
   const hasError = event.errorDetail && Object.keys(event.errorDetail).length > 0;
