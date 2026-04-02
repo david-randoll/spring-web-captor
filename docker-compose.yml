@@ -1,12 +1,15 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: examples/backend
+      dockerfile: Dockerfile
     ports:
       - "11006:11006"
 
   frontend:
     build:
-      context: ./frontend
+      context: examples/frontend
+      dockerfile: Dockerfile
       args:
         VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:11006}
     ports:
