@@ -40,6 +40,6 @@ RUN addgroup --system --gid 1001 "$APP_USER" && \
 WORKDIR /app
 COPY --from=build --chown=$APP_USER:$APP_USER /app/target/*.jar app.jar
 USER $APP_USER
-EXPOSE 8085
-ENV server.port=8085
+EXPOSE 11006
+ENV server.port=11006
 CMD ["java", "-jar", "app.jar"]

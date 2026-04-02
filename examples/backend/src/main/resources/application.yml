@@ -1,5 +1,5 @@
 server:
-  port: 8085
+  port: 11006
   error:
     include-message: always
     include-binding-errors: always
