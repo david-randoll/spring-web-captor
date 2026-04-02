@@ -10,13 +10,14 @@ import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
+// Demo environment only — permissive CORS is fine here
 @Configuration
 public class CorsConfig {
 
     @Bean
     public FilterRegistrationBean<CorsFilter> corsFilterRegistration() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("*"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
