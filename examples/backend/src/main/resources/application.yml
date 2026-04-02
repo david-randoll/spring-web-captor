@@ -1,0 +1,37 @@
+server:
+  port: 8085
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+web-captor:
+  enabled: true
+  event-details:
+    include-endpoint-exists: true
+    include-full-url: true
+    include-path: true
+    include-method: true
+    include-request-headers: true
+    include-query-params: true
+    include-path-params: true
+    include-request-body: true
+    include-multipart-files: true
+    include-response-headers: true
+    include-response-body: true
+    include-response-status: true
+    include-error-details: true
+  additional-details:
+    duration: true
+    ip-address: true
+    user-agent: true
+  excluded-endpoints:
+    - path: /api/captured-events
+      method: "*"
+    - path: /api/config
+      method: "*"

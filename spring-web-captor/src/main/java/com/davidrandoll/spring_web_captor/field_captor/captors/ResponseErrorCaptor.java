@@ -48,6 +48,10 @@ public class ResponseErrorCaptor implements IResponseFieldCaptor {
     }
 
     public Map<String, Object> getErrorDetails(CachedBodyHttpServletResponse responseWrapper) {
+        // Set the error status code attribute so DefaultErrorAttributes reads the correct status
+        // instead of defaulting to 999 when the attribute is missing
+        responseWrapper.getRequest().setAttribute("jakarta.servlet.error.status_code", responseWrapper.getStatus());
+
         WebRequest webRequest = new ServletWebRequest(responseWrapper.getRequest());
         ErrorAttributeOptions options = ErrorAttributeOptions.of(ErrorAttributeOptions.Include.values());
         return errorAttributes.getErrorAttributes(webRequest, options);
