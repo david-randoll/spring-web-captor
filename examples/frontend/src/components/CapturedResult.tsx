@@ -7,7 +7,7 @@ import JsonViewer from './JsonViewer';
 import {
   Clock, Globe, Monitor, MapPin, FileText, AlertTriangle,
   Server, ArrowDown, Layers, Search, GitBranch, Upload,
-  RotateCcw, Sparkles, Puzzle, Info,
+  RotateCcw, Sparkles, Puzzle, Info, Download, Eye,
 } from 'lucide-react';
 
 function parseDuration(d: unknown): string {
@@ -354,17 +354,48 @@ export default function CapturedResult({ event, onTryAnother }: Props) {
                   <div key={`${field}-${i}`} className="bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-4 mb-2">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-mono text-sm text-sky-400 font-medium">{f.filename}</span>
-                      <span className="text-xs text-slate-500">{(f.size / 1024).toFixed(1)} KB</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500">{f.size < 1024 ? `${f.size} B` : `${(f.size / 1024).toFixed(1)} KB`}</span>
+                        {f.base64Content && (
+                          <a
+                            href={`data:${f.contentType || 'application/octet-stream'};base64,${f.base64Content}`}
+                            download={f.filename}
+                            className="flex items-center gap-1 text-xs text-sky-400 hover:text-sky-300 transition-colors"
+                          >
+                            <Download className="w-3 h-3" /> Download
+                          </a>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-slate-500 mb-2">
                       Field: <span className="text-slate-400">{field}</span> | Type: <span className="text-slate-400">{f.contentType}</span>
                     </div>
                     {f.contentType?.startsWith('image/') && f.base64Content && (
                       <img
                         src={`data:${f.contentType};base64,${f.base64Content}`}
                         alt={f.filename}
-                        className="mt-2 max-h-32 rounded border border-slate-700"
+                        className="mt-2 max-h-48 rounded border border-slate-700"
                       />
+                    )}
+                    {f.contentType?.startsWith('text/') && f.base64Content && (
+                      <div className="mt-2">
+                        <div className="flex items-center gap-1 text-[10px] text-slate-500 uppercase tracking-wider mb-1">
+                          <Eye className="w-3 h-3" /> Preview
+                        </div>
+                        <pre className="bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-300 font-mono overflow-x-auto max-h-40 whitespace-pre-wrap break-all">
+                          {atob(f.base64Content)}
+                        </pre>
+                      </div>
+                    )}
+                    {f.contentType === 'application/json' && f.base64Content && (
+                      <div className="mt-2">
+                        <div className="flex items-center gap-1 text-[10px] text-slate-500 uppercase tracking-wider mb-1">
+                          <Eye className="w-3 h-3" /> Preview
+                        </div>
+                        <pre className="bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-300 font-mono overflow-x-auto max-h-40 whitespace-pre-wrap break-all">
+                          {(() => { try { return JSON.stringify(JSON.parse(atob(f.base64Content)), null, 2); } catch { return atob(f.base64Content); } })()}
+                        </pre>
+                      </div>
                     )}
                   </div>
                 ))

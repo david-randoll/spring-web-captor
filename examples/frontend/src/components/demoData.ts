@@ -104,12 +104,14 @@ export const DEMOS: DemoScenario[] = [
     method: 'POST',
     url: '/demo/upload',
     headers: {},
-    body: '(multipart: demo.txt + description)',
+    body: '(multipart: image + description)',
     tags: ['POST', 'Multipart', 'Files'],
-    run() {
+    async run() {
+      const res = await fetch('/demo-landscape.jpg');
+      const blob = await res.blob();
       const fd = new FormData();
-      fd.append('file', new Blob(['Hello from Spring Web Captor!'], { type: 'text/plain' }), 'demo.txt');
-      fd.append('description', 'Demo file upload');
+      fd.append('file', new File([blob], 'landscape.jpg', { type: 'image/jpeg' }), 'landscape.jpg');
+      fd.append('description', 'Beautiful landscape photo');
       return sendRequest('POST', '/demo/upload', { body: fd });
     },
   },
