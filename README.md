@@ -1,337 +1,327 @@
 # Spring Web Captor
 
-A Spring Web library that intercepts and captures HTTP request/response data-including URI, path, query parameters,
-headers, and request/response body (including files) and publishes an event with this data.
+[![Maven Central](https://img.shields.io/maven-central/v/com.davidrandoll/spring-web-captor)](https://central.sonatype.com/artifact/com.davidrandoll/spring-web-captor)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![Java 21+](https://img.shields.io/badge/Java-21%2B-blue)
+![Spring Boot 3.5](https://img.shields.io/badge/Spring%20Boot-3.5-green)
 
-## Features
+**Zero-config HTTP observability for Spring Boot.**
 
-- **Automatic HTTP interception:** Captures all incoming HTTP requests and outgoing responses in your Spring Boot
-  application.
-- **Rich event data:** Publishes events containing details such as method, path, query/path parameters, headers, and
-  full request/response.
-- **Multipart & file support:** Handles multipart/form-data and file uploads.
-- **Content type handling:** Supports JSON, XML, plain text, form data, and more.
-- **Spring Boot integration:** Provides auto-configuration for easy setup in Spring Boot projects.
-- **Conditional HTTP Event Publishing:** Interfaces like `IHttpRequestPublishCondition` and
-  `IHttpResponsePublishCondition` allow flexible, condition-based publishing of HTTP events.
-- **Excluded Endpoints Support:** Easily configure HTTP methods and paths to exclude from event publishing.
-- **Extensible Publisher & Parsing:** Implement your own `IHttpEventPublisher`, `IRequestBodyParser`,
-  `IResponseBodyParser`, `IRequestFieldCaptor`, or `IResponseFieldCaptor` for custom event publication and field/body
-  parsing.
+Add one dependency, write an event listener, and every HTTP request and response in your application is automatically captured as a structured event - complete with method, URL, headers, body (JSON, XML, multipart, form-data), status code, errors, and more.
 
-## Demo
+**[Live Demo](https://captor.davidrandoll.com)** | **[Example App](examples/)**
 
-A live demo is available at [captor.davidrandoll.com](https://captor.davidrandoll.com).
+---
 
-## Usage
+## Why Spring Web Captor?
 
-1. **Add to your Spring Boot project:**
+- **Zero boilerplate** - add the dependency, listen for events. No filters, interceptors, or wrapper classes to write.
+- **Full HTTP fidelity** - captures method, URL, path/query params, headers, request body, response body, status code, errors, and file uploads.
+- **Production-ready toggles** - enable/disable any captured field, exclude endpoints by path pattern, or conditionally publish events - all via `application.properties`.
+- **Pluggable architecture** - swap the event publisher (Kafka, RabbitMQ), add custom body parsers, field captors, or event enrichers.
+- **Spring Boot native** - auto-configured starter with `@ConditionalOnMissingBean` everywhere. Works with Spring Security and error handling out of the box.
+- **Well-tested** - 340+ tests covering JSON, XML, multipart, concurrent requests, error scenarios, and more.
 
-   ```xml
-    <dependency>
-        <groupId>com.davidrandoll</groupId>
-        <artifactId>spring-web-captor</artifactId>
-        <version>1.0.3</version>
-    </dependency>
-   ```
+---
 
-2. **Listen for HTTP events:**
+## Quick Start
 
-   Implement an event listener for `HttpRequestEvent` and `HttpResponseEvent` to handle captured traffic.
+### 1. Add the dependency
 
-   ```java
-   @EventListener
-   public void handleRequest(HttpRequestEvent event) {
-       // Access event.getMethod(), event.getPath(), event.getRequestBody(), etc.
-   }
-   ```
-   or for response body
-   ```java
-   @EventListener
-   public void handleRequest(HttpResponseEvent event) {
-       // Access event.getMethod(), event.getPath(), event.getResponseBody(), etc.
-   }
-   ```
+```xml
+<dependency>
+    <groupId>com.davidrandoll</groupId>
+    <artifactId>spring-web-captor</artifactId>
+    <version>1.0.3</version>
+</dependency>
+```
 
-## Custom Event Publisher
+<details>
+<summary>Gradle</summary>
 
-By default, Spring Web Captor uses Spring's `ApplicationEventPublisher` to publish web capture events. However, if you
-prefer not to use `ApplicationEventPublisher`, you can provide your own implementation of the `IWebCaptorEventPublisher`
-interface.
+```groovy
+implementation 'com.davidrandoll:spring-web-captor:1.0.3'
+```
+</details>
 
-For example, you could publish events to a message broker such as RabbitMQ, Kafka, or any other system as needed.
-
-### Example
+### 2. Listen for events
 
 ```java
-
 @Component
-public class MyCustomEventPublisher implements IWebCaptorEventPublisher {
-    @Override
-    public void publishEvent(Object event) {
-        // Example: publish to RabbitMQ, Kafka, or any other system
-        System.out.println("Captured event: " + event);
+@Slf4j
+public class HttpEventLogger {
+
+    @EventListener
+    public void onRequest(HttpRequestEvent event) {
+        log.info(">> {} {}", event.getMethod(), event.getPath());
+    }
+
+    @EventListener
+    public void onResponse(HttpResponseEvent event) {
+        log.info("<< {} {} -> {}", event.getMethod(), event.getPath(), event.getResponseStatus());
     }
 }
 ```
 
-You can then configure your application to use this custom publisher when setting up the web captor.
+### 3. Run your app
 
-## Extending Event Details
+Start your Spring Boot application. Every HTTP request is now captured and published as an event.
 
-This library supports adding additional details to the request/response event using the `IHttpEventExtension` interface.
-You can implement this interface to enrich captured HTTP events with custom information.
+**That's it. No configuration required.**
 
-For example, the provided `ClientDetailsHttpEventExtension` implementation uses this interface to capture the user's IP
-address and User-Agent:
+---
+
+## Configuration Reference
+
+All properties are optional. The library works out of the box with sensible defaults.
+
+### Core
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `web-captor.enabled` | `boolean` | `true` | Enable or disable all HTTP capturing |
+
+### Event Details (`web-captor.event-details.*`)
+
+Toggle individual fields captured in events:
+
+| Property | Default | Description |
+|---|---|---|
+| `include-endpoint-called` | `true` | Whether a mapped controller endpoint was matched |
+| `include-full-url` | `true` | Complete request URL (scheme + host + path + query) |
+| `include-path` | `true` | Request path |
+| `include-method` | `true` | HTTP method (GET, POST, etc.) |
+| `include-request-headers` | `true` | Request headers |
+| `include-query-params` | `true` | Query string parameters |
+| `include-path-params` | `true` | Path variables (e.g. `/users/{id}`) |
+| `include-request-body` | `true` | Parsed request body |
+| `include-multipart-files` | `true` | Multipart file metadata |
+| `include-response-headers` | `true` | Response headers |
+| `include-response-body` | `true` | Parsed response body |
+| `include-response-status` | `true` | HTTP status code |
+| `include-error-details` | `true` | Exception details for failed requests |
+
+### Additional Details (`web-captor.additional-details.*`)
+
+Built-in enrichment fields:
+
+| Property | Default | Description |
+|---|---|---|
+| `duration` | `true` | Request processing duration in milliseconds |
+| `ip-address` | `true` | Client IP address |
+| `user-agent` | `true` | User-Agent header value |
+
+### Excluded Endpoints
+
+Exclude specific paths and methods from event publishing using Ant-style patterns:
+
+```yaml
+web-captor:
+  excluded-endpoints:
+    - path: /actuator/**
+      method: "*"          # all methods (default)
+    - path: /api/health
+      method: GET
+    - path: /swagger-ui/**
+      method: GET,POST
+```
+
+---
+
+## Captured Data
+
+| Request Event (`HttpRequestEvent`) | Response Event (`HttpResponseEvent`) |
+|---|---|
+| HTTP method (GET, POST, PUT, PATCH, DELETE, etc.) | All request event fields |
+| Full URL and path | HTTP status code |
+| Query parameters | Response headers |
+| Path variables | Response body (JSON, XML, text) |
+| Request headers (multi-value) | Error details (exception message, stack trace) |
+| Request body (JSON, XML, form-data, multipart) | |
+| File upload metadata | |
+| Custom fields via extensions and field captors | |
+
+---
+
+## Advanced Usage
+
+<details>
+<summary><strong>Custom Event Publisher</strong></summary>
+
+By default, events are published via Spring's `ApplicationEventPublisher`. To publish to Kafka, RabbitMQ, or any other system, implement `IWebCaptorEventPublisher`:
 
 ```java
-public class ClientDetailsHttpEventExtension implements IHttpEventExtension {
+@Component
+public class KafkaEventPublisher implements IWebCaptorEventPublisher {
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    @Override
+    public void publishEvent(Object event) {
+        kafkaTemplate.send("http-events", event);
+    }
+}
+```
+
+Your bean automatically replaces the default publisher via `@ConditionalOnMissingBean`.
+
+</details>
+
+<details>
+<summary><strong>Event Extensions</strong></summary>
+
+Enrich events with custom data by implementing `IHttpEventExtension`. The returned map is merged into the event's `additionalData`:
+
+```java
+@Component
+public class SecurityContextExtension implements IHttpEventExtension {
     @Override
     public Map<String, Object> enrichRequestEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent event) {
-        // return a map with the user ip and user agent here
-        return Map.of(
-                "userIp", req.getRemoteAddr(),
-                "userAgent", req.getHeader("User-Agent")
-        );
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            return Map.of("userId", auth.getName());
+        }
+        return Map.of();
     }
 
     @Override
     public Map<String, Object> enrichResponseEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent reqEvent, HttpResponseEvent resEvent) {
-        // return a map with the user ip and user agent here
-        return Map.of(
-                "userIp", req.getRemoteAddr(),
-                "userAgent", req.getHeader("User-Agent")
-        );
+        return Map.of(); // or enrich response events too
     }
 }
 ```
 
-To use your own extension, implement the `IHttpEventExtension` interface and register it as a Spring bean. This allows
-your additional details to be automatically included in the captured events.
-
-## Retrieving Additional Details from Published Events
-
-When an HTTP event is published, any additional details added by your `IHttpEventExtension` implementation will be
-available in the event's `additionalData` map. You can access them as follows:
+Access enriched data from listeners:
 
 ```java
-
 @EventListener
-public void handleHttpEvent(HttpEvent event) {
-    // Retrieve additional details by key from the additionalData map
-    Object clientIp = event.getAdditionalData().get("userIp");
-    Object userAgent = event.getAdditionalData().get("userAgent");
-    // Process the details as needed
+public void onRequest(HttpRequestEvent event) {
+    Object userId = event.getAdditionalData().get("userId");
 }
 ```
 
-## Customizing Request/Response Body Parsing
+**Built-in extensions** (enabled by default via `web-captor.additional-details.*`):
+- `HttpDurationFilterExtension` - request duration in ms
+- `IpAddressHttpEventExtension` - client IP address
+- `UserAgentHttpEventExtension` - User-Agent header
 
-Spring Web Captor allows you to customize how HTTP bodies are parsed by implementing the `IRequestBodyParser` or
-`IResponseBodyParser` interface. This is useful if you want to support additional content types or handle
-request/response bodies in a specific way.
+</details>
 
-### Example: Custom JSON Request Body Parser
+<details>
+<summary><strong>Custom Field Captors</strong></summary>
 
-The library provides a built-in example for parsing JSON request bodies. You can implement your own parser by following
-a similar pattern:
+Extract and transform individual fields before event publication using `IRequestFieldCaptor` or `IResponseFieldCaptor`:
 
 ```java
-
-@RequiredArgsConstructor
+@Component
 @Order(1)
-public class JsonRequestBodyParser implements IRequestBodyParser {
-    private final ObjectMapper objectMapper;
+public class CorrelationIdCaptor implements IRequestFieldCaptor {
+    @Override
+    public void capture(HttpServletRequest request, HttpRequestEvent.HttpRequestEventBuilder<?, ?> builder) {
+        String correlationId = request.getHeader("X-Correlation-ID");
+        if (correlationId != null) {
+            builder.additionalData("correlationId", correlationId);
+        }
+    }
+}
+```
 
+Use `@Order` to control execution priority when multiple captors are registered.
+
+</details>
+
+<details>
+<summary><strong>Custom Body Parsers</strong></summary>
+
+Add support for additional content types by implementing `IRequestBodyParser` or `IResponseBodyParser`:
+
+```java
+@Component
+@Order(5)
+public class ProtobufRequestBodyParser implements IRequestBodyParser {
     @Override
     public boolean supports(String contentType) {
-        return contentType != null && contentType.contains("json");
+        return contentType != null && contentType.contains("application/protobuf");
     }
 
     @Override
     public BodyPayload parse(ServletRequest request, byte[] body) throws IOException {
-        if (ObjectUtils.isEmpty(body)) {
-            return new BodyPayload(JsonNodeFactory.instance.nullNode());
-        }
-        return new BodyPayload(objectMapper.readTree(body));
+        // Parse protobuf bytes into a JsonNode
+        return new BodyPayload(jsonNode);
     }
 }
 ```
 
-```java
+**Built-in parsers:** JSON, multipart/form-data, x-www-form-urlencoded, and plain text (fallback).
 
-@RequiredArgsConstructor
-@Order(1)
-public class JsonResponseBodyParser implements IResponseBodyParser {
-    private final ObjectMapper objectMapper;
+Use `@Order` to control parser priority. The first parser whose `supports()` returns `true` is used.
 
-    @Override
-    public boolean supports(String contentType) {
-        return contentType != null && contentType.contains("json");
-    }
+</details>
 
-    @Override
-    public BodyPayload parse(HttpServletResponse response, byte[] body) throws IOException {
-        if (ObjectUtils.isEmpty(body)) {
-            return new BodyPayload(JsonNodeFactory.instance.nullNode());
-        }
-        return new BodyPayload(objectMapper.readTree(body));
-    }
-}
-```
+<details>
+<summary><strong>Conditional Publishing</strong></summary>
 
-**How it works:**
-
-- The `supports` method checks if the `Content-Type` header includes `"json"`.
-- If supported, the `parse` method uses Jackson's `ObjectMapper` to deserialize the request body into a `JsonNode`,
-  which is then wrapped in a `BodyPayload` object.
-
-To use your own parser, implement `IRequestBodyParser` or `IResponseBodyParser`, and register it via the
-`IBodyParserRegistry.register` or injects the `DefaultBodyParserRegistry` bean and call the `register` method in your
-configuration class.
-
-The registry is there so that you can use the built-in parsers or your own custom parsers seamlessly.
-
-> **Tip:** You can provide multiple parsers for different content types (e.g., XML, protobuf, etc.) and control their
-> order with the `@Order` annotation.
-> By default, the library includes request body parsers for JSON, XML, multipart,
-> x-www-form-urlencoded and a fallback parser for plain text.
-
-## Customizing Field Capture
-
-Spring Web Captor gives you fine-grained control over which fields are captured from requests and responses by allowing
-you to implement the `IRequestFieldCaptor` and `IResponseFieldCaptor` interfaces. These interfaces let you add,
-transform, or filter specific fields before they are published in the event.
-
-### Example: Capturing a Custom Request Header
-
-Suppose you want to extract a custom header ("X-Request-Token") from every incoming request and include it in the
-captured event. You can implement `IRequestFieldCaptor` as follows:
+Control when events are published by implementing `IHttpRequestPublishCondition` or `IHttpResponsePublishCondition`:
 
 ```java
-import com.davidrandoll.spring_web_captor.capture.IRequestFieldCaptor;
-import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
-import lombok.RequiredArgsConstructor;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-
-import javax.servlet.http.HttpServletRequest;
-
 @Component
-@RequiredArgsConstructor
-@Order(1)
-public class XRequestTokenFieldCaptor implements IRequestFieldCaptor {
-    @Override
-    public void capture(HttpServletRequest request, HttpRequestEvent.HttpRequestEventBuilder<?, ?> builder) {
-        String token = servletRequest.getHeader("X-Request-Token");
-        if (token != null) {
-            builder.additionalData("xRequestToken", token);
-        }
-    }
-}
-```
-
-### Example: Capturing a Custom Response Header
-
-Likewise, you can capture fields from the response by implementing `IResponseFieldCaptor`. For example, to capture an "
-X-Response-Token" header:
-
-```java
-import com.davidrandoll.spring_web_captor.capture.IResponseFieldCaptor;
-import com.davidrandoll.spring_web_captor.event.HttpRequestEvent;
-import com.davidrandoll.spring_web_captor.event.HttpResponseEvent;
-import lombok.RequiredArgsConstructor;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-
-import javax.servlet.http.HttpServletResponse;
-
-@Component
-@RequiredArgsConstructor
-@Order(1)
-public class XResponseTokenFieldCaptor implements IResponseFieldCaptor {
-    @Override
-    public void capture(HttpServletResponse response, HttpResponseEvent.HttpResponseEventBuilder<?, ?> builder) {
-        String token = servletResponse.getHeader("X-Response-Token");
-        if (token != null) {
-            builder.additionalData("xResponseToken", token);
-        }
-    }
-}
-```
-
-**How it works:**
-
-- Implement the appropriate interface and annotate your class with `@Component` (and optionally `@Order`).
-- Use the `captureFields` method to extract, transform, or add any extra information to the event’s `additionalData`
-  map.
-
-> **Tip:** You can implement multiple captors and control their order of execution with the `@Order` annotation.
-
-## Conditional HTTP Event Publishing
-
-Spring Web Captor allows you to control exactly when HTTP request and response events are published by implementing
-conditional interfaces. This enables you to filter out specific requests or responses based on any logic you need (e.g.,
-only publish events for authenticated users, or requests to certain paths).
-
-There are two main interfaces for this purpose:
-
-- `IHttpRequestPublishCondition`
-- `IHttpResponsePublishCondition`
-
-Implement either (or both) to define custom logic for event publishing.
-
-### Example: Only Publish Events for Authenticated Requests
-
-Here's how you might implement a condition to publish events only if the user is authenticated:
-
-```java
-
-@Component
-@Order(1)
-public class AuthenticatedRequestPublishCondition implements IHttpRequestPublishCondition {
+public class AuthenticatedOnlyCondition implements IHttpRequestPublishCondition {
     @Override
     public boolean shouldPublishRequest(HttpServletRequest request, HttpServletResponse response) {
-        // Example: Only publish if a user principal is present (i.e., the user is authenticated)
         return request.getUserPrincipal() != null;
     }
 }
 ```
 
-You can register multiple condition beans. All conditions must return `true` for the event to be published (logical
-AND).
+All registered conditions must return `true` for an event to be published (logical AND).
 
-> **Note:** If you want to exclude requests to specific endpoints (such as health checks or documentation), you can do
-> this easily using the built-in app property `web-captor.excluded-endpoints` in your configuration, without
-> needing custom code.
+> **Tip:** For simple path/method exclusion, use the [`web-captor.excluded-endpoints`](#excluded-endpoints) property instead of writing code.
 
-**Summary:**
+</details>
 
-- Use `IHttpRequestPublishCondition` and/or `IHttpResponsePublishCondition` for programmatic, logic-based control.
-- Use the `excluded-endpoints` property for simple endpoint/path/method exclusion.
+---
 
-## Captured Data
+## XML Extension
 
-- **Request:**
-    - Method (GET, POST, PUT, PATCH, DELETE etc.)
-    - Full URL and Path
-    - Query parameters
-    - Path Variables
-    - Headers (including multiple values)
-    - Body (JSON, XML, form-data, files, etc.)
-    - custom fields added by `IRequestFieldCaptor` or `IHttpEventExtension`
+For XML request/response body parsing, add the XML extension module:
 
-- **Response:**
-    - All fields from the request event
-    - Status code
-    - Headers
-    - Response Body
+```xml
+<dependency>
+    <groupId>com.davidrandoll</groupId>
+    <artifactId>spring-web-captor-xml</artifactId>
+    <version>1.0.3</version>
+</dependency>
+```
+
+<details>
+<summary>Gradle</summary>
+
+```groovy
+implementation 'com.davidrandoll:spring-web-captor-xml:1.0.3'
+```
+</details>
+
+Auto-configured - just add the dependency. Requires `jackson-dataformat-xml` on your classpath.
+
+---
+
+## How It Works
+
+Spring Web Captor hooks into the servlet layer using a `HandlerInterceptor` (for requests) and a `OncePerRequestFilter` (for responses):
+
+1. **Wrap** - the request and response are wrapped to cache body bytes for non-destructive reading.
+2. **Capture** - registered `IRequestFieldCaptor` / `IResponseFieldCaptor` beans extract fields (method, path, headers, body, etc.) into event builders.
+3. **Parse** - `IBodyParserRegistry` selects the appropriate parser by content type and parses the body into a structured `BodyPayload`.
+4. **Gate** - `IHttpRequestPublishCondition` / `IHttpResponsePublishCondition` beans determine whether to publish the event.
+5. **Enrich** - `IHttpEventExtension` beans add custom data (duration, IP, user agent, or your own).
+6. **Publish** - `IWebCaptorEventPublisher` publishes the final `HttpRequestEvent` / `HttpResponseEvent`.
+
+Every component is replaceable - register your own Spring bean and the default is automatically swapped out.
+
+---
 
 ## Contributing
 
-Contributions are welcome! If you have suggestions for improvements or bug fixes, feel free to open an issue or submit a
-pull request.
+Contributions are welcome! If you have suggestions or bug fixes, feel free to [open an issue](https://github.com/david-randoll/spring-web-captor/issues) or submit a pull request.
 
 To contribute:
 
@@ -340,9 +330,13 @@ To contribute:
 3. Make your changes and include tests if applicable.
 4. Open a pull request describing your changes.
 
-Please ensure your code follows the existing style and passes any automated checks.
+**Requirements:** Java 21+, Maven.
 
-Thank you for helping improve this project!
+---
+
+## License
+
+This project is licensed under the [Apache License 2.0](LICENSE).
 
 ---
 
