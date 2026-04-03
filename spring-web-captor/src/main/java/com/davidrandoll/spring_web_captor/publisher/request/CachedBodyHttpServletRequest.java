@@ -21,7 +21,7 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
     private byte[] cachedBody;
     @Getter
     @Setter
-    private boolean endpointExists;
+    private boolean endpointCalled;
 
     @Getter
     private boolean isPublished = false;

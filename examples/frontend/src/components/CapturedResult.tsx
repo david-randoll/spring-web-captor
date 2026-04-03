@@ -224,10 +224,10 @@ export default function CapturedResult({ event, onTryAnother }: Props) {
               </div>
               <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
                 <div className="flex items-center gap-1 text-[10px] text-slate-500 uppercase tracking-wider mb-2">
-                  <MapPin className="w-3 h-3" /> Endpoint Exists
+                  <MapPin className="w-3 h-3" /> Endpoint Called
                 </div>
-                <span className={`font-mono text-sm font-medium ${event.endpointExists ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {String(event.endpointExists)}
+                <span className={`font-mono text-sm font-medium ${event.endpointCalled ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {String(event.endpointCalled)}
                 </span>
               </div>
             </div>

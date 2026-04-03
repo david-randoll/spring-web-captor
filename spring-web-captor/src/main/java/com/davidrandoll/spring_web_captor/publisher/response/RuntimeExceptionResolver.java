@@ -33,8 +33,7 @@ public class RuntimeExceptionResolver implements HandlerExceptionResolver {
                 body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
                 if (errorProperties.getIncludePath().equals(ErrorProperties.IncludeAttribute.ALWAYS))
                     body.put("path", request.getRequestURI());
-                if (errorProperties.getIncludeMessage().equals(ErrorProperties.IncludeAttribute.ALWAYS))
-                    body.put("error", HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+                body.put("error", HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
                 if (errorProperties.getIncludeMessage().equals(ErrorProperties.IncludeAttribute.ALWAYS))
                     body.put("message", ex.getMessage());
                 if (errorProperties.getIncludeStacktrace().equals(ErrorProperties.IncludeAttribute.ALWAYS) || errorProperties.isIncludeException())

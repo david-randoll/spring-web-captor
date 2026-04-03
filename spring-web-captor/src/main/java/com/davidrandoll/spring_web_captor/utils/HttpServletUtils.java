@@ -12,6 +12,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.util.WebUtils;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +32,9 @@ public class HttpServletUtils {
     public CachedBodyHttpServletRequest toCachedBodyHttpServletRequest(@NonNull HttpServletRequest request) {
         if (request instanceof CachedBodyHttpServletRequest cachedBodyHttpServletRequest)
             return cachedBodyHttpServletRequest;
+        // Unwrap through decorator chain (e.g. StandardMultipartHttpServletRequest)
+        CachedBodyHttpServletRequest nested = WebUtils.getNativeRequest(request, CachedBodyHttpServletRequest.class);
+        if (nested != null) return nested;
         return new CachedBodyHttpServletRequest(request);
     }
 

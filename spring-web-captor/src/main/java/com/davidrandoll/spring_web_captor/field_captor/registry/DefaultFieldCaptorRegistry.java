@@ -11,8 +11,8 @@ public class DefaultFieldCaptorRegistry extends AbstractFieldCaptorRegistry {
             IBodyParserRegistry bodyParserRegistry, WebCaptorProperties.EventDetails properties,
             HandlerExceptionResolver resolver, DefaultErrorAttributes errorAttributes
     ) {
-        if (properties.isIncludeEndpointExists())
-            this.register(new RequestEndpointExistsCaptor());
+        if (properties.isIncludeEndpointCalled())
+            this.register(new RequestEndpointCalledCaptor());
         if (properties.isIncludeFullUrl())
             this.register(new RequestFullUrlCaptor());
         if (properties.isIncludePath())

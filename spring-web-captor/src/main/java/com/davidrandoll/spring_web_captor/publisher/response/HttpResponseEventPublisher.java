@@ -38,7 +38,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
             if (!requestWrapper.isPublished() && shouldPublishRequest) {
                 // If the request event is not published, we need to publish it here.
                 // This can happen if the request does not reach the controller or if an error occurs before the filter chain is executed.
-                publisher.publishRequestEvent(request, response);
+                publisher.publishRequestEvent(requestWrapper, responseWrapper);
             }
             boolean shouldPublishResponse = publisher.shouldPublishResponseEvent(requestWrapper, responseWrapper);
             if (shouldPublishResponse) {

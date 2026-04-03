@@ -28,7 +28,7 @@ import static java.util.Objects.isNull;
 @AllArgsConstructor
 @SuperBuilder(toBuilder = true)
 public class BaseHttpEvent {
-    private boolean endpointExists;
+    private boolean endpointCalled;
     private String fullUrl;
     private String path;
     private HttpMethodEnum method;

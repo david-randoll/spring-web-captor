@@ -1,4 +1,4 @@
-package com.davidrandoll.spring_web_captor.app_property.endpoint_exists;
+package com.davidrandoll.spring_web_captor.app_property.endpoint_called;
 
 import com.davidrandoll.spring_web_captor.WebCaptorApplication;
 import com.davidrandoll.spring_web_captor.setup.EventCaptureListener;
@@ -12,17 +12,17 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK, classes = WebCaptorApplication.class)
 @AutoConfigureMockMvc
 @TestPropertySource(properties = {
-        "web-captor.event-details.include-endpoint-exists=false"
+        "web-captor.event-details.include-endpoint-called=true"
 })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class EndpointExistsDisabledTest {
+class EndpointCalledEnabledTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -35,13 +35,13 @@ class EndpointExistsDisabledTest {
     }
 
     @Test
-    void testEndpointExistsIsNotCapturedWhenDisabled() throws Exception {
+    void testEndpointCalledIsCapturedWhenEnabled() throws Exception {
         mockMvc.perform(post("/test/property/echo")
                         .contentType(MediaType.TEXT_PLAIN)
                         .content("hello"))
                 .andExpect(status().isOk());
 
-        var request = eventCaptureListener.getRequestEvents().get(0);
-        assertFalse(request.isEndpointExists(), "Expected endpointExists to be false when disabled");
+        var request = eventCaptureListener.getRequestEvents().getFirst();
+        assertTrue(request.isEndpointCalled(), "Expected endpointCalled to be true");
     }
 }
