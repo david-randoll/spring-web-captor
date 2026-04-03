@@ -31,7 +31,7 @@ A live demo is available at [captor.davidrandoll.com](https://captor.davidrandol
     <dependency>
         <groupId>com.davidrandoll</groupId>
         <artifactId>spring-web-captor</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
     </dependency>
    ```
 
