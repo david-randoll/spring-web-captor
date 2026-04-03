@@ -13,7 +13,7 @@ spring:
 web-captor:
   enabled: true
   event-details:
-    include-endpoint-exists: true
+    include-endpoint-called: true
     include-full-url: true
     include-path: true
     include-method: true

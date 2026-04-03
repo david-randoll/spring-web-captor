@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 
 @TestPropertySource(properties = {
-        "web-captor.event-details.include-endpoint-exists=false",
+        "web-captor.event-details.include-endpoint-called=false",
         "web-captor.event-details.include-full-url=false",
         "web-captor.event-details.include-path=false",
         "web-captor.event-details.include-method=false",
@@ -57,7 +57,7 @@ class PropertyCaptureDisabledTests {
         HttpRequestEvent request = eventCaptureListener.getRequestEvents().getFirst();
         HttpResponseEvent response = eventCaptureListener.getResponseEvents().getFirst();
 
-        assertFalse(request.isEndpointExists());
+        assertFalse(request.isEndpointCalled());
         assertNull(request.getFullUrl());
         assertNull(request.getPath());
         assertNull(request.getMethod());

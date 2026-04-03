@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Example" type="Multirun" separateTabs="false" reuseTabsWithFailures="false" startOneByOne="true" markFailedProcess="true" hideSuccessProcess="false" delayTime="0.0">
+    <runConfiguration name="DemoApplication" type="Spring Boot" />
+    <runConfiguration name="Run Frontend" type="Shell Script" />
+    <method v="2" />
+  </configuration>
+</component>

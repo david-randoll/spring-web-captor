@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -147,6 +148,30 @@ class ErrorTestControllerTest {
         HttpResponseEvent event = eventCaptureListener.getResponseEvents().getFirst();
         assertEquals(418, event.getErrorDetail().get("status"),
                 "errorDetail.status should be 418 for teapot errors");
+    }
+
+    @Test
+    void testIsServerErrorResponse_forRuntimeException() throws Exception {
+        mockMvc.perform(get("/test/error/runtime"))
+                .andExpect(status().isInternalServerError());
+
+        HttpResponseEvent event = eventCaptureListener.getResponseEvents().getFirst();
+        assertThat(event.isServerErrorResponse()).isTrue();
+        assertThat(event.isErrorResponse()).isTrue();
+        assertThat(event.isSuccessResponse()).isFalse();
+        assertThat(event.isClientErrorResponse()).isFalse();
+    }
+
+    @Test
+    void testIsClientErrorResponse_for404() throws Exception {
+        mockMvc.perform(get("/test/error/notfound"))
+                .andExpect(status().isNotFound());
+
+        HttpResponseEvent event = eventCaptureListener.getResponseEvents().getFirst();
+        assertThat(event.isClientErrorResponse()).isTrue();
+        assertThat(event.isErrorResponse()).isTrue();
+        assertThat(event.isSuccessResponse()).isFalse();
+        assertThat(event.isServerErrorResponse()).isFalse();
     }
 
     private void assertErrorCaptured(String expectedMessageFragment, int expectedStatus) throws JsonProcessingException {

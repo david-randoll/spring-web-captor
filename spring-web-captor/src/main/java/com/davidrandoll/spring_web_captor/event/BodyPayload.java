@@ -21,6 +21,8 @@ public class BodyPayload {
     @JsonIgnore
     private MultiValueMap<String, MultipartFile> files;
 
+    private Map<String, List<SerializedFile>> serializedFiles;
+
     public BodyPayload(JsonNode body) {
         this.body = body;
     }
@@ -28,10 +30,18 @@ public class BodyPayload {
     public BodyPayload(JsonNode body, MultiValueMap<String, MultipartFile> files) {
         this.body = body;
         this.files = files;
+        // Eagerly serialize files so that base64 content is captured before
+        // Spring cleans up multipart temp files
+        this.serializedFiles = serializeFiles(files);
     }
 
     @JsonProperty("files")
     public Map<String, List<SerializedFile>> getSerializedFiles() {
+        if (serializedFiles != null) return serializedFiles;
+        return Collections.emptyMap();
+    }
+
+    private static Map<String, List<SerializedFile>> serializeFiles(MultiValueMap<String, MultipartFile> files) {
         if (files == null || files.isEmpty()) return Collections.emptyMap();
         Map<String, List<SerializedFile>> result = new LinkedHashMap<>();
         files.forEach((key, multipartFiles) ->

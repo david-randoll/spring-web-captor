@@ -11,7 +11,7 @@ export interface BodyPayload {
 }
 
 export interface HttpRequestEvent {
-  endpointExists: boolean;
+  endpointCalled: boolean;
   fullUrl: string;
   path: string;
   method: string;

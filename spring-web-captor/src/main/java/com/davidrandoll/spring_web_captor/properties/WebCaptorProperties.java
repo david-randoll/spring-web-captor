@@ -31,7 +31,7 @@ public class WebCaptorProperties {
 
     @Data
     public static class EventDetails {
-        private boolean includeEndpointExists = true;
+        private boolean includeEndpointCalled = true;
         private boolean includeFullUrl = true;
         private boolean includePath = true;
         private boolean includeMethod = true;
