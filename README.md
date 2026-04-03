@@ -19,6 +19,10 @@ headers, and request/response body (including files) and publishes an event with
   `IResponseBodyParser`, `IRequestFieldCaptor`, or `IResponseFieldCaptor` for custom event publication and field/body
   parsing.
 
+## Demo
+
+A live demo is available at [captor.davidrandoll.com](https://captor.davidrandoll.com).
+
 ## Usage
 
 1. **Add to your Spring Boot project:**
@@ -27,7 +31,7 @@ headers, and request/response body (including files) and publishes an event with
     <dependency>
         <groupId>com.davidrandoll</groupId>
         <artifactId>spring-web-captor</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </dependency>
    ```
 
