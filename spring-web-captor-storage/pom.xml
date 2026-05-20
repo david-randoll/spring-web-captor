@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.davidrandoll</groupId>
+        <artifactId>spring-web-captor-parent</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>spring-web-captor-storage</artifactId>
+    <name>Spring Web Captor Storage</name>
+    <description>Storage-agnostic persistence layer for spring-web-captor. Defines the INetworkLog
+        interface, INetworkLogStore boundary, and an async listener that funnels captured HTTP
+        events through pluggable enrichers before persisting. No JPA, no Mongo, no opinion about
+        where rows end up — consumers wire any backend by implementing INetworkLogStore.
+    </description>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.davidrandoll</groupId>
+            <artifactId>spring-web-captor</artifactId>
+            <version>${revision}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
