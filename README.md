@@ -80,6 +80,7 @@ All properties are optional. The library works out of the box with sensible defa
 | Property | Type | Default | Description |
 |---|---|---|---|
 | `web-captor.enabled` | `boolean` | `true` | Enable or disable all HTTP capturing |
+| `web-captor.defer-outer-filter-packages` | `List<String>` | `[org.springframework.security.]` | Package prefixes whose exceptions are re-thrown for an outer servlet filter to translate. See [Defer Outer-Filter Packages](#defer-outer-filter-packages-web-captordefer-outer-filter-packages). |
 
 ### Event Details (`web-captor.event-details.*`)
 
@@ -124,6 +125,53 @@ web-captor:
       method: GET
     - path: /swagger-ui/**
       method: GET,POST
+```
+
+### Defer Outer-Filter Packages (`web-captor.defer-outer-filter-packages`)
+
+When an exception is thrown from a controller, the captor's `UnhandledExceptionResponseFilter`
+catches it as a safety net and renders a JSON 500 body. That's the right behavior for *truly*
+unhandled exceptions — but for exceptions that a servlet filter outside the captor is supposed
+to translate (the classic example is Spring Security's `ExceptionTranslationFilter` calling
+`sendError(403)` on `AccessDeniedException`), the captor must re-throw so the outer filter can
+do its job. Otherwise you get 500s where you expected 401/403.
+
+`web-captor.defer-outer-filter-packages` is the list of package-name prefixes whose exceptions
+get re-thrown instead of rendered. The captor walks the exception's cause chain and defers if
+any frame's class name starts with one of these prefixes — subclasses are matched automatically,
+so you list package roots, not individual classes.
+
+**Default:**
+
+```yaml
+web-captor:
+  defer-outer-filter-packages:
+    - org.springframework.security.
+```
+
+This is the only namespace shipped by default because Spring Security is the only widely-used
+framework that translates exceptions in an outer servlet filter (rather than via
+`@ControllerAdvice` / `HandlerExceptionResolver`, both of which the captor handles automatically).
+
+**Extending for a custom framework:**
+
+```yaml
+web-captor:
+  defer-outer-filter-packages:
+    - org.springframework.security.   # keep this
+    - com.acme.security.              # your framework
+    - org.example.auth.               # another one
+```
+
+Any `RuntimeException` thrown from those packages — or any exception whose cause chain contains
+one — will be re-thrown by the captor so your outer filter can translate it. The library never
+needs to know about specific exception classes; the package prefix is enough.
+
+**Disabling deferral entirely** (rare — captor will catch and 500 even security exceptions):
+
+```yaml
+web-captor:
+  defer-outer-filter-packages: []
 ```
 
 ---

@@ -142,19 +142,12 @@ public class AppConfig {
         return new ErrorProperties();
     }
 
-    /**
-     * Registered with an order that places it OUTSIDE Spring Security's filter chain
-     * (DEFAULT_FILTER_ORDER = -100). HIGHEST_PRECEDENCE + 2 keeps it just inside the existing
-     * HttpResponseEventPublisher (HIGHEST_PRECEDENCE + 1) so the captor still observes the
-     * response we write for truly-unhandled exceptions, but well before Spring Security so
-     * its ExceptionTranslationFilter handles its own exceptions first.
-     */
     @Bean("unhandledExceptionResponseFilter")
     @Order(Ordered.HIGHEST_PRECEDENCE + 2)
     @ConditionalOnMissingBean(name = "unhandledExceptionResponseFilter", ignored = UnhandledExceptionResponseFilter.class)
     @Conditional(IsWebCaptorEnabled.class)
-    public UnhandledExceptionResponseFilter unhandledExceptionResponseFilter(ObjectMapper mapper, ErrorProperties properties) {
-        return new UnhandledExceptionResponseFilter(mapper, properties);
+    public UnhandledExceptionResponseFilter unhandledExceptionResponseFilter(ObjectMapper mapper, ErrorProperties errorProperties, WebCaptorProperties webCaptorProperties) {
+        return new UnhandledExceptionResponseFilter(mapper, errorProperties, webCaptorProperties.getDeferOuterFilterPackages());
     }
 
     @Bean("excludedPathPublishCondition")

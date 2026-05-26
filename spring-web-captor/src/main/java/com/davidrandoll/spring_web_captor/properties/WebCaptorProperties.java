@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Data
 @Configuration
 @ConfigurationProperties(prefix = "web-captor")
@@ -21,6 +22,30 @@ public class WebCaptorProperties {
     private AdditionalDetails additionalDetails = new AdditionalDetails();
 
     private List<ExcludedRequest> excludedEndpoints = new ArrayList<>();
+
+    /**
+     * Package-name prefixes whose exceptions should be re-thrown from
+     * {@code UnhandledExceptionResponseFilter} instead of being rendered as a 500. Used when an
+     * outer servlet filter (one that runs <em>outside</em> our captor filters in the chain) is
+     * expected to translate the exception itself — e.g. Spring Security's
+     * {@code ExceptionTranslationFilter} calling {@code sendError(403)} for
+     * {@code AccessDeniedException}.
+     *
+     * <p>The default list covers Spring Security. To extend for another framework with the same
+     * translate-in-an-outer-filter pattern, replace or augment the list via configuration:
+     *
+     * <pre>{@code
+     * web-captor:
+     *   defer-outer-filter-packages:
+     *     - org.springframework.security.
+     *     - com.acme.security.
+     * }</pre>
+     *
+     * <p>The captor walks the exception's cause chain (depth-limited, self-reference-safe) and
+     * defers if any frame's class name starts with one of these prefixes. Subclasses are matched
+     * automatically — no per-class list to maintain.
+     */
+    private List<String> deferOuterFilterPackages = new ArrayList<>(List.of("org.springframework.security."));
 
     @Data
     public static class AdditionalDetails {
