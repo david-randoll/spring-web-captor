@@ -18,12 +18,14 @@ import com.davidrandoll.spring_web_captor.publisher.IHttpEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.IWebCaptorEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.request.HttpRequestEventPublisher;
 import com.davidrandoll.spring_web_captor.publisher.response.HttpResponseEventPublisher;
-import com.davidrandoll.spring_web_captor.publisher.response.RuntimeExceptionResolver;
+import com.davidrandoll.spring_web_captor.publisher.response.UnhandledExceptionResponseFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.web.ErrorProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -35,6 +37,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
+import java.util.EnumSet;
 import java.util.List;
 
 @Configuration
@@ -103,11 +106,26 @@ public class AppConfig {
     }
 
     @Bean("httpResponseEventPublisher")
-    @Order(Ordered.HIGHEST_PRECEDENCE + 1)
     @ConditionalOnMissingBean(name = "httpResponseEventPublisher", ignored = HttpResponseEventPublisher.class)
     @Conditional(IsWebCaptorEnabled.class)
     public HttpResponseEventPublisher httpResponseEventPublisher(IHttpEventPublisher publisher) {
         return new HttpResponseEventPublisher(publisher);
+    }
+
+    /**
+     * Explicit servlet registration so the filter runs on <em>both</em> the REQUEST dispatch and
+     * the ERROR dispatch that Tomcat performs after {@code sendError}. Spring Boot's default
+     * registration for {@code @Bean Filter}s is REQUEST-only, which silently drops the captor on
+     * the dispatch where the error body is actually written — the calculation-service bug.
+     */
+    @Bean("httpResponseEventPublisherRegistration")
+    @Conditional(IsWebCaptorEnabled.class)
+    public FilterRegistrationBean<HttpResponseEventPublisher> httpResponseEventPublisherRegistration(HttpResponseEventPublisher filter) {
+        FilterRegistrationBean<HttpResponseEventPublisher> reg = new FilterRegistrationBean<>(filter);
+        reg.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
+        reg.setDispatcherTypes(EnumSet.of(DispatcherType.REQUEST, DispatcherType.ERROR, DispatcherType.ASYNC));
+        reg.addUrlPatterns("/*");
+        return reg;
     }
 
     @Bean("httpRequestEventPublisher")
@@ -124,11 +142,19 @@ public class AppConfig {
         return new ErrorProperties();
     }
 
-    @Bean("runtimeExceptionResolver")
-    @ConditionalOnMissingBean(name = "runtimeExceptionResolver", ignored = RuntimeExceptionResolver.class)
+    /**
+     * Registered with an order that places it OUTSIDE Spring Security's filter chain
+     * (DEFAULT_FILTER_ORDER = -100). HIGHEST_PRECEDENCE + 2 keeps it just inside the existing
+     * HttpResponseEventPublisher (HIGHEST_PRECEDENCE + 1) so the captor still observes the
+     * response we write for truly-unhandled exceptions, but well before Spring Security so
+     * its ExceptionTranslationFilter handles its own exceptions first.
+     */
+    @Bean("unhandledExceptionResponseFilter")
+    @Order(Ordered.HIGHEST_PRECEDENCE + 2)
+    @ConditionalOnMissingBean(name = "unhandledExceptionResponseFilter", ignored = UnhandledExceptionResponseFilter.class)
     @Conditional(IsWebCaptorEnabled.class)
-    public RuntimeExceptionResolver runtimeExceptionResolver(ObjectMapper mapper, ErrorProperties properties) {
-        return new RuntimeExceptionResolver(mapper, properties);
+    public UnhandledExceptionResponseFilter unhandledExceptionResponseFilter(ObjectMapper mapper, ErrorProperties properties) {
+        return new UnhandledExceptionResponseFilter(mapper, properties);
     }
 
     @Bean("excludedPathPublishCondition")

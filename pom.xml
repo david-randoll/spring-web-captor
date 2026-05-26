@@ -39,7 +39,7 @@
         <module>spring-web-captor-storage</module>
     </modules>
     <properties>
-        <revision>1.1.0</revision>
+        <revision>1.1.1</revision>
 
         <java.version>21</java.version>
     </properties>

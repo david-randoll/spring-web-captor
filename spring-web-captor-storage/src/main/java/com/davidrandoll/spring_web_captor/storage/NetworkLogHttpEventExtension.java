@@ -24,7 +24,11 @@ public class NetworkLogHttpEventExtension implements IHttpEventExtension {
 
     @Override
     public Map<String, Object> enrichRequestEvent(HttpServletRequest req, HttpServletResponse res, HttpRequestEvent event) {
-        String requestId = requestIdProvider.nextRequestId(req);
+        // Reuse an existing requestId if the captor already saw this request on an earlier
+        // dispatch (e.g. an original dispatch followed by a Tomcat error dispatch via sendError).
+        // The same requestId lets the consumer correlate both publications into one row.
+        Object existing = req.getAttribute(REQUEST_ID_KEY);
+        String requestId = (existing instanceof String s && !s.isEmpty()) ? s : requestIdProvider.nextRequestId(req);
         req.setAttribute(REQUEST_ID_KEY, requestId);
 
         Map<String, Object> data = new HashMap<>();

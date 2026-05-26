@@ -25,6 +25,14 @@ public class CachedBodyHttpServletResponse extends TeeHttpServletResponseWrapper
 
     @Getter
     private boolean isPublished = false;
+    /**
+     * True once {@code sendError} has been called on this response. Distinguishes the case
+     * "container will perform an error dispatch to render the body via /error" from the case
+     * "handler set a status and wrote the body itself". Used by {@code HttpResponseEventPublisher}
+     * to defer publishing until after the error dispatch writes the real body.
+     */
+    @Getter
+    private boolean errorSent = false;
     private HttpResponseEvent httpResponseEvent;
     private CompletableFuture<byte[]> responseBodyFuture;
 
@@ -93,5 +101,17 @@ public class CachedBodyHttpServletResponse extends TeeHttpServletResponseWrapper
 
     public void markAsPublished() {
         this.isPublished = true;
+    }
+
+    @Override
+    public void sendError(int sc) throws IOException {
+        this.errorSent = true;
+        super.sendError(sc);
+    }
+
+    @Override
+    public void sendError(int sc, String msg) throws IOException {
+        this.errorSent = true;
+        super.sendError(sc, msg);
     }
 }
