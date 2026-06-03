@@ -48,13 +48,7 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
         boolean isErrorDispatch = request.getDispatcherType() == DispatcherType.ERROR;
         boolean shouldPublishRequest = publisher.shouldPublishRequestEvent(requestWrapper, responseWrapper);
 
-        if (log.isInfoEnabled()) {
-            // Diagnostic: prints which dispatch is running this filter. If you see only "REQUEST"
-            // for an exception-translated path and no follow-up "ERROR", the container is not
-            // performing an error dispatch (or it's not reaching this filter), and the response
-            // publish for that request will be skipped.
-            log.info("HttpResponseEventPublisher: dispatch={} path={}", request.getDispatcherType(), request.getRequestURI());
-        }
+        log.debug("HttpResponseEventPublisher: dispatch={} path={}", request.getDispatcherType(), request.getRequestURI());
 
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
@@ -65,10 +59,8 @@ public class HttpResponseEventPublisher extends OncePerRequestFilter {
                 publisher.publishRequestEvent(requestWrapper, responseWrapper);
             }
             if (publisher.shouldPublishResponseEvent(requestWrapper, responseWrapper)) {
-                if (log.isInfoEnabled()) {
-                    log.info("HttpResponseEventPublisher: publishing response on dispatch={} status={}",
-                            request.getDispatcherType(), response.getStatus());
-                }
+                log.debug("HttpResponseEventPublisher: publishing response on dispatch={} status={}",
+                        request.getDispatcherType(), response.getStatus());
                 responseWrapper.getResponseBody()
                         .thenRun(() -> publisher.publishResponseEvent(requestWrapper, responseWrapper))
                         .exceptionally(ex -> {
