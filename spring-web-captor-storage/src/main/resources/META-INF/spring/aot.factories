@@ -1,0 +1,2 @@
+org.springframework.aot.hint.RuntimeHintsRegistrar=\
+com.davidrandoll.spring_web_captor.storage.aot.NetworkLogStorageRuntimeHints

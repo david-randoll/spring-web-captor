@@ -10,7 +10,7 @@ import java.util.List;
 
 
 @Data
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConfigurationProperties(prefix = "web-captor")
 public class WebCaptorProperties {
     private boolean enabled = true;

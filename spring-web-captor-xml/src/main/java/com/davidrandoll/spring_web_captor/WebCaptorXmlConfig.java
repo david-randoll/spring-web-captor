@@ -11,7 +11,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 
 @Slf4j
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Conditional(IsWebCaptorEnabled.class)
 @RequiredArgsConstructor
 public class WebCaptorXmlConfig {

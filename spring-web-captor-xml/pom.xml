@@ -20,26 +20,28 @@
     </properties>
 
     <dependencies>
+        <!-- compile+optional (not provided): kept non-transitive for consumers but present on this
+             module's native-image test classpath (provided is excluded from the native runtime classpath). -->
         <dependency>
             <groupId>com.davidrandoll</groupId>
             <artifactId>spring-web-captor</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

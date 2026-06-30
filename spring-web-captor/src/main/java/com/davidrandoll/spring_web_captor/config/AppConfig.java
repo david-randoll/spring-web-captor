@@ -40,7 +40,9 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import java.util.EnumSet;
 import java.util.List;
 
-@Configuration
+// proxyBeanMethods=false: no @Bean method calls another, so CGLIB enhancement is unnecessary — and
+// runtime CGLIB enhancement is unsupported under a GraalVM native image.
+@Configuration(proxyBeanMethods = false)
 public class AppConfig {
     @Bean
     @ConditionalOnMissingBean

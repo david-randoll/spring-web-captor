@@ -39,9 +39,15 @@
         <module>spring-web-captor-storage</module>
     </modules>
     <properties>
-        <revision>1.1.2</revision>
+        <revision>1.2.0</revision>
 
         <java.version>21</java.version>
+
+        <!-- JaCoCo line-coverage gate, scoped to the library's own packages (a @SpringBootTest
+             otherwise instruments all of Spring and dilutes the report). Lever: the native build
+             passes -Djacoco.check.phase=none because the single-context native run scopes coverage low. -->
+        <jacoco.check.phase>verify</jacoco.check.phase>
+        <jacoco.line.coverage>0.80</jacoco.line.coverage>
     </properties>
     <dependencies>
         <dependency>
@@ -53,16 +59,101 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
-            <scope>provided</scope>
+            <!-- compile+optional (not provided): the library references autoconfigure types directly
+                 (e.g. ErrorProperties) and provided-scope deps are excluded from the native-image runtime
+                 classpath. Optional keeps it non-transitive for consumers, who already bring spring-boot. -->
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Required for process-test-aot / native JUnit test discovery under the nativeTest profile. -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
+            <!-- Library jars have no application main class — skip repackage (needed so the
+                 spring-boot-maven-plugin's process-test-aot goal runs under the nativeTest profile). -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>repackage</id>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Windows native-image builder needs more heap than its ~32% RAM default, or ParallelGC
+                 segfaults mid-analysis. TestTag must init at build time for bare @Tag to work. -->
+            <plugin>
+                <groupId>org.graalvm.buildtools</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <configuration>
+                    <buildArgs>
+                        <buildArg>-J-Xmx10g</buildArg>
+                        <buildArg>--initialize-at-build-time=org.junit.platform.engine.TestTag</buildArg>
+                    </buildArgs>
+                </configuration>
+            </plugin>
+            <!-- Line-coverage gate, scoped to com/davidrandoll/** so a @SpringBootTest doesn't dilute it. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <configuration>
+                    <includes>
+                        <include>com/davidrandoll/**</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/aot/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>${jacoco.check.phase}</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.line.coverage}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
