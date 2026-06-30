@@ -9,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-@Configuration("webCaptorWebConfig")
+@Configuration(value = "webCaptorWebConfig", proxyBeanMethods = false)
 @EnableWebMvc
 @RequiredArgsConstructor
 @Conditional(IsWebCaptorEnabled.class)
