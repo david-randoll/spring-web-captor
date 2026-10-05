@@ -46,10 +46,24 @@ public class CachedBodyHttpServletRequest extends ContentCachingRequestWrapper {
         if (cached.length > 0) {
             this.cachedBody = cached;
         } else {
-            var inputStream = super.getInputStream();
-            this.cachedBody = StreamUtils.copyToByteArray(inputStream);
+            this.cachedBody = readUncached();
         }
         return new CachedBodyServletInputStream(this.cachedBody);
+    }
+
+    /**
+     * The body nobody read during the chain. When the container has already closed the stream - a body-less
+     * request, or an empty body that a reader consumed and auto-closed, so nothing was cached - there is no body
+     * left to capture, and that is an empty body rather than an error.
+     */
+    private byte[] readUncached() throws IOException {
+        ServletInputStream inputStream = super.getInputStream();
+        try {
+            return StreamUtils.copyToByteArray(inputStream);
+        } catch (IOException closed) {
+            log.debug("Request body not readable after the chain ({}); captured as empty", closed.getMessage());
+            return new byte[0];
+        }
     }
 
     @SneakyThrows
